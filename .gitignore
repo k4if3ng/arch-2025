@@ -1,0 +1,7 @@
+**/build/
+difftest/*
+.history/*
+*.log
+*.fst
+*.out
+.gdb_history
