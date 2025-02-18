@@ -5,3 +5,4 @@ difftest/*
 *.fst
 *.out
 .gdb_history
+.vscode/
