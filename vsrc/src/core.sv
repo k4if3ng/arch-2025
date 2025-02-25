@@ -3,9 +3,12 @@
 
 `ifdef VERILATOR
 `include "include/common.sv"
+`include "include/pipes.sv"
 `endif
 
-module core import common::*;(
+module core
+	import common::*;
+	import pipes::*;(
 	input  logic       clk, reset,
 	output ibus_req_t  ireq,
 	input  ibus_resp_t iresp,
@@ -14,6 +17,67 @@ module core import common::*;(
 	input  logic       trint, swint, exint
 );
 	/* TODO: Add your CPU-Core here. */
+	u1 stallpc;
+
+	assign stallpc = ireq.valid && ~iresp.data_ok;
+
+	u64 pc, pc_nxt;
+
+	always_ff @(posedge clk) begin
+		if (reset) begin
+			pc <= PCINIT;
+		end else if (stallpc) begin
+			pc <= pc;
+		end else begin
+			pc <= pc_nxt;
+		end
+	end
+
+	assign ireq.valid = 1'b1;
+	assign ireq.addr  = pc;
+
+	u32 raw_instr;
+
+	assign raw_instr = iresp.data;
+
+	fetch_data_t dataF, dataF_nxt;
+	decode_data_t dataD, dataD_nxt;
+
+	u1 flushF;
+
+	assign flushF = ireq.valid & ~iresp.data_ok;
+
+	always_ff @(posedge clk) begin
+		if (flushF) begin
+			dataF <= '0;
+		end else begin
+			dataF <= dataF_nxt;
+		end
+	end
+
+	fetch fetch(
+		.dataF     (dataF),
+		.raw_instr (raw_instr)
+	);
+
+	pcselect pcselect(
+		.pcplus4 (pc + 4),
+		.pc_selected(pc_nxt)
+	);
+
+	creg_addr_t ra1, ra2;
+	word_t rd1, rd2;
+
+	decode decode(
+		.dataF (dataF),
+		.dataD (dataD),
+		.ra1   (ra1),
+		.ra2   (ra2),
+		.rd1   (rd1),
+		.rd2   (rd2)
+	)
+
+	
 
 `ifdef VERILATOR
 	DifftestInstrCommit DifftestInstrCommit(
@@ -26,9 +90,9 @@ module core import common::*;(
 		.skip               (0),
 		.isRVC              (0),
 		.scFailed           (0),
-		.wen                (0),
-		.wdest              (0),
-		.wdata              (0)
+		.wen                (dataW_nxt.ctl.regwrite),
+		.wdest              ({3'b0, dataM.dst}),
+		.wdata              (dataW_nxt.writedata)
 	);
 
 	DifftestArchIntRegState DifftestArchIntRegState (
