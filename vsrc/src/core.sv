@@ -42,22 +42,51 @@ module core
 
 	fetch_data_t dataF, dataF_nxt;
 	decode_data_t dataD, dataD_nxt;
+	exec_data_t dataE, dataE_nxt;
+	mem_data_t dataM, dataM_nxt;
+	write_data_t dataW, dataW_nxt;
 
-	u1 flushF;
+	assign dataW = dataW_nxt;
 
-	assign flushF = ireq.valid & ~iresp.data_ok;
+	idreg idreg(
+		.clk	(clk),
+		.reset  (reset),
+		.dataF_new(dataF_nxt),
+		.enable (1'b1),
+		.flush  (stallpc),
+		.dataF  (dataF)
+	);
 
-	always_ff @(posedge clk) begin
-		if (flushF) begin
-			dataF <= '0;
-		end else begin
-			dataF <= dataF_nxt;
-		end
-	end
+	dereg dereg(
+		.clk	(clk),
+		.reset  (reset),
+		.dataD_new(dataD_nxt),
+		.enable (1'b1),
+		.flush  (stallpc),
+		.dataD  (dataD)
+	);
+
+	emreg emreg(
+		.clk	(clk),
+		.reset  (reset),
+		.dataE_new(dataE_nxt),
+		.enable (1'b1),
+		.flush  (stallpc),
+		.dataE  (dataE)
+	);
+
+	mwreg mwreg(
+		.clk	(clk),
+		.reset  (reset),
+		.dataM_new(dataM_nxt),
+		.enable (1'b1),
+		.flush  (stallpc),
+		.dataM  (dataM)
+	);
 
 	fetch fetch(
-		.dataF     (dataF),
-		.raw_instr (raw_instr)
+		.raw_instr (raw_instr),
+		.dataF     (dataF_nxt)
 	);
 
 	pcselect pcselect(
@@ -70,12 +99,31 @@ module core
 
 	decode decode(
 		.dataF (dataF),
-		.dataD (dataD),
+		.dataD (dataD_nxt),
 		.ra1   (ra1),
 		.ra2   (ra2),
 		.rd1   (rd1),
 		.rd2   (rd2)
-	)
+	);
+
+	regfile regfile(
+		.clk    (clk),
+		.reset  (reset),
+		.ra1    (ra1),
+		.ra2    (ra2),
+		.rd1    (rd1),
+		.rd2    (rd2),
+		.wvalid (dataM.ctl.reg_write),
+		.wa     (dataM.dst),
+		.wd     (data)
+	);
+
+    alu alu(
+        .srca(dataD.srca),
+        .srcb(dataD.ctl.alusrc ? dataD.imm : dataD.srcb),
+        .aluop(dataD.ctl.aluop),
+        .aluout(dataE_nxt.aluout)
+    );
 
 	
 
@@ -90,9 +138,9 @@ module core
 		.skip               (0),
 		.isRVC              (0),
 		.scFailed           (0),
-		.wen                (dataW_nxt.ctl.regwrite),
+		.wen                (dataM.ctl.reg_write),
 		.wdest              ({3'b0, dataM.dst}),
-		.wdata              (dataW_nxt.writedata)
+		.wdata              (dataM_nxt.writedata)
 	);
 
 	DifftestArchIntRegState DifftestArchIntRegState (

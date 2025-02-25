@@ -10,8 +10,8 @@ module fetch
     import common::*;
     import pipes::*;(
 
-    output fetch_data_t dataF,
-    input u32 raw_instr
+    input u32 raw_instr,
+    output fetch_data_t dataF
 );
 
     assign dataF.raw_instr = raw_instr;

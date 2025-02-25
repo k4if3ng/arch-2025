@@ -10,8 +10,8 @@ module alu
     import common::*;
     import pipes::*;(
     input word_t      srca, srcb,
-    input alu_ctl_t   ctl,
-    output word_t     result,
+    input alu_op_t    aluop,
+    output word_t     aluout
 );
 
     shamt_t shamt;
@@ -19,41 +19,27 @@ module alu
     // arith_t temp;
 
     always_comb begin
-        exception = 1'b0;
-        result = '0;
+        aluout = '0;
 
-        unique case (ctl.aluop)
+        unique case (aluop)
             ALU_ADD: begin
-                result = srca + srcb;
+                aluout = srca + srcb;
             end
             ALU_SUB: begin
-                result = srca - srcb;
-            end
-            ALU_SLL: begin
-                result = srca << shamt;
-            end
-            ALU_SRL: begin
-                result = srca >> shamt;
-            end
-            ALU_SRA: begin
-                result = signed'(srca) >>> shamt;
-            end
-            ALU_SLT: begin
-                result = (signed'(srca) < signed'(srcb)) ? 32'b1 : 32'b0;
+                aluout = srca - srcb;
             end
             ALU_AND: begin
-                result = srca & srcb;
+                aluout = srca & srcb;
             end
             ALU_OR: begin
-                result = srca | srcb;
+                aluout = srca | srcb;
             end
             ALU_XOR: begin
-                result = srca ^ srcb;
+                aluout = srca ^ srcb;
             end
-            ALU_SLTU: begin
-                result = (srca < srcb) ? 32'b1 : 32'b0;
+            default: begin
+                aluout = '0;
             end
-
         endcase
     end
 

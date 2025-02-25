@@ -10,8 +10,22 @@ package pipes;
 /* Define instrucion decoding rules here */
 
 
-parameter F7_ADDI = 7'b0010011;
-parameter F3_ADDI = 7'b000;
+parameter OPCODE_RTYPE = 7'b0110011;    // R-type 指令的 opcode
+parameter OPCODE_ITYPE = 7'b0010011;    // I-type 指令的 opcode
+parameter OPCODE_LOAD = 7'b0000011;     // Load 指令的 opcode
+parameter OPCODE_STORE = 7'b0100011;    // Store 指令的 opcode
+parameter OPCODE_OPIMM = 7'b0011011;    // 扩展的 I-type 指令的 opcode
+
+parameter FUNC3_ADD = 3'b000;           // funct3: ADD
+parameter FUNC3_XOR = 3'b100;           // funct3: XOR
+parameter FUNC3_OR  = 3'b110;           // funct3: OR
+parameter FUNC3_AND = 3'b111;           // funct3: AND
+parameter FUNC3_ADDI = 3'b000;          // funct3: ADDI
+parameter FUNC3_XORI = 3'b100;          // funct3: XORI
+parameter FUNC3_ORI  = 3'b110;          // funct3: ORI
+parameter FUNC3_ANDI = 3'b111;          // funct3: ANDI
+parameter FUNC7_SUB = 7'b0100000;       // funct7: SUB
+parameter FUNC7_ADD = 7'b0000000;       // funct7: ADD
     
 /* Define pipeline structures here */
 
@@ -20,30 +34,47 @@ typedef struct packed {
 } fetch_data_t;
 
 typedef enum logic [5:0] {
-	ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND,
-	ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI, SRLI, SRAI,
-	LUI, AUIPC
+	UNKNOWNN,
+	ADD, SUB, XOR, OR, AND, ADDI, XORI, ORI, ANDI,
+	ADDIW, SUBW, ADDW
 } decode_op_t;
 
 typedef enum logic [4:0] {
-	ALU_ADD, ALU_SUB, ALU_SLL, ALU_SLT, ALU_SLTU, 
-    ALU_XOR, ALU_SRL, ALU_SRA, ALU_OR, ALU_AND
+	NOP, ALU_ADD, ALU_SUB, ALU_XOR, ALU_OR, ALU_AND
 } alu_op_t;
 
 typedef struct packed {
 	decode_op_t op;
 	alu_op_t aluop;
 	u1 reg_write;
-	u1 alu_src;
+	u1 alusrc;
 	u1 mem_read, mem_write;
 	u1 mem_to_reg;
 } control_t;
 
 typedef struct packed {
 	word_t srca, srcb;
+	word_t imm;
 	control_t ctl;
 	creg_addr_t dst;
 } decode_data_t;
+
+typedef struct packed {
+	control_t ctl;
+	word_t aluout;
+} exec_data_t;
+
+typedef struct packed {
+	control_t ctl;
+	word_t memout;
+	word_t
+	creg_addr_t dst;
+} mem_data_t;
+
+typedef struct packed {
+	word_t writedata;
+	creg_addr_t dst;
+} write_data_t;
 
 
 endpackage

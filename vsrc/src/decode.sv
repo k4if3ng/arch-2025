@@ -22,6 +22,7 @@ module decode
 
     decoder decoder(
         .raw_instr(dataF.raw_instr),
+        .imm(dataD.imm),
         .ctl(ctl)
     );
 
