@@ -4,6 +4,7 @@
 `ifdef VERILATOR
 `include "include/common.sv"
 `include "include/pipes.sv"
+`include "src/decoder.sv"
 `else
 
 `endif
@@ -28,7 +29,7 @@ module decode
 
     assign dataD.ctl = ctl;
     assign dataD.dst = dataF.raw_instr[11:7];
-
+    assign dataD.instr = dataF.instr;
     assign dataD.srca = rd1;
     assign dataD.srcb = rd2;
 

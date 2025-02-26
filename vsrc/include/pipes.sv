@@ -31,20 +31,15 @@ parameter FUNC7_ADD = 7'b0000000;       // funct7: ADD
 
 typedef struct packed {
 	u32 raw_instr;
+	instr_data_t instr;
+	word_t pcplus4;
 } fetch_data_t;
-
-typedef enum logic [5:0] {
-	UNKNOWNN,
-	ADD, SUB, XOR, OR, AND, ADDI, XORI, ORI, ANDI,
-	ADDIW, SUBW, ADDW
-} decode_op_t;
 
 typedef enum logic [4:0] {
 	NOP, ALU_ADD, ALU_SUB, ALU_XOR, ALU_OR, ALU_AND
 } alu_op_t;
 
 typedef struct packed {
-	decode_op_t op;
 	alu_op_t aluop;
 	u1 reg_write;
 	u1 alusrc;
@@ -53,28 +48,39 @@ typedef struct packed {
 } control_t;
 
 typedef struct packed {
+	word_t pc;
+	u32 raw_instr;
+} instr_data_t;
+
+typedef struct packed {
 	word_t srca, srcb;
 	word_t imm;
 	control_t ctl;
 	creg_addr_t dst;
+	instr_data_t instr;
 } decode_data_t;
 
 typedef struct packed {
 	control_t ctl;
 	word_t aluout;
+	creg_addr_t dst;
+	instr_data_t instr;
 } exec_data_t;
 
 typedef struct packed {
 	control_t ctl;
 	word_t memout;
-	word_t
+	word_t aluout;
 	creg_addr_t dst;
+	instr_data_t instr;
 } mem_data_t;
 
 typedef struct packed {
+	control_t ctl;
 	word_t writedata;
 	creg_addr_t dst;
-} write_data_t;
+	instr_data_t instr;
+} wb_data_t;
 
 
 endpackage

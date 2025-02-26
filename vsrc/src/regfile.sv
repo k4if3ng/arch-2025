@@ -18,14 +18,27 @@ module regfile
 );
 
     word_t regs [31:0];
+    word_t regs_nxt [31:0];
+
+    always_comb begin
+        for (int i = 0; i < 32; i++) begin
+            if (wvalid && (i[4:0] == wa)) begin
+                regs_nxt[i[4:0]] = wd; // 用组合逻辑向next_reg写入
+            end else begin
+                regs_nxt[i[4:0]] = regs[i[4:0]]; // 复制其他没有写入的寄存器
+            end
+        end
+    end
 
     always_ff @(posedge clk) begin
         if (reset) begin
             for (int i = 0; i < 32; i++) begin
-                regs[i] <= 64'h0;
+                regs[i[4:0]] <= 64'h0;
             end
-        end else if (wvalid && wa != 5'd0) begin
-            regs[wa] <= wd;
+        end else begin
+            for (int i = 0; i < 32; i++) begin
+                regs[i[4:0]] <= regs_nxt[i[4:0]];
+            end
         end
     end
 

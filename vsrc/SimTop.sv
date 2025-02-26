@@ -1,6 +1,5 @@
 `ifdef VERILATOR
 `include "include/common.sv"
-`include "include/pipes.sv"
 `include "src/core.sv"
 `include "src/decode.sv"
 `include "src/decoder.sv"
@@ -12,6 +11,7 @@
 `include "src/emreg.sv"
 `include "src/mwreg.sv"
 `include "src/pcselect.sv"
+`include "src/execute.sv"
 `include "util/IBusToCBus.sv"
 `include "util/DBusToCBus.sv"
 `include "util/CBusArbiter.sv"
