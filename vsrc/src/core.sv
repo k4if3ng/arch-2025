@@ -169,7 +169,7 @@ module core
 		.clock              (clk),
 		.coreid             (0),
 		.index              (0),
-		.valid              (1'b1),
+		.valid              (!stall),
 		.pc                 (pc),
 		.instr              (0),
 		.skip               (0),
