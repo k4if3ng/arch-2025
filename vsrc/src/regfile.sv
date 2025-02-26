@@ -14,11 +14,11 @@ module regfile
     output word_t       rd1, rd2,
     input  logic        wvalid,
     input  creg_addr_t  wa,
-    input  word_t       wd
+    input  word_t       wd,
+    output word_t       regs_nxt [31:0]
 );
 
     word_t regs [31:0];
-    word_t regs_nxt [31:0];
 
     always_comb begin
         for (int i = 0; i < 32; i++) begin
