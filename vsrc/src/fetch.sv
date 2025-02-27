@@ -18,7 +18,6 @@ module fetch
 
     assign dataF.instr.pc = pc;
     assign dataF.instr.raw_instr = raw_instr;
-    assign dataF.raw_instr = raw_instr;
 
 endmodule
 

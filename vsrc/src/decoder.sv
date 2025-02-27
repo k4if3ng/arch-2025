@@ -80,7 +80,7 @@ module decoder
                 endcase
             end
 
-            OPCODE_OPIMM: begin
+            OPCODE_RTYPEM: begin
                 case (f3)
                     FUNC3_ADD: begin
                         if (f7 == FUNC7_SUB) begin
@@ -89,19 +89,29 @@ module decoder
                             ctl.aluop = ALU_ADD;
                         end
                         ctl.reg_write = 1;
-                    end
-                    FUNC3_ANDI: begin
-                        imm = {{52{raw_instr[31]}}, raw_instr[31:20]}; 
-                        ctl.aluop = ALU_AND;
-                        ctl.reg_write = 1;
-                        ctl.alusrc = 1;
+                        ctl.is_word = 1;
                     end
                     default: begin
                         ctl.aluop = NOP;
                     end
                 endcase
             end
-            
+
+            OPCODE_ITYPEM: begin
+                imm = {{52{raw_instr[31]}}, raw_instr[31:20]};  // I-type 指令的立即数
+                case (f3)
+                    FUNC3_ADDI: begin
+                        ctl.aluop = ALU_ADD;
+                        ctl.reg_write = 1;
+                        ctl.alusrc = 1;
+                        ctl.is_word = 1;
+                    end
+                    default: begin
+                        ctl.aluop = NOP;
+                    end
+                endcase
+            end
+
             default: begin
                 ctl.aluop = NOP;
             end

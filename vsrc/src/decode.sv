@@ -16,22 +16,29 @@ module decode
     output decode_data_t dataD,
 
     output creg_addr_t  ra1, ra2,
-    input  word_t       rd1, rd2
+    input word_t       rd1, rd2,
+
+    input u1            fwd_valid_a, fwd_valid_b,
+    input word_t        fwd_aluout
 );
 
     control_t ctl;
 
     decoder decoder(
-        .raw_instr(dataF.raw_instr),
+        .raw_instr(dataF.instr.raw_instr),
         .imm(dataD.imm),
         .ctl(ctl)
     );
 
     assign dataD.ctl = ctl;
-    assign dataD.dst = dataF.raw_instr[11:7];
+    assign dataD.dst = dataF.instr.raw_instr[11:7];
     assign dataD.instr = dataF.instr;
-    assign dataD.srca = rd1;
-    assign dataD.srcb = rd2;
+    assign ra1 = dataF.instr.raw_instr[19:15];
+    assign ra2 = dataF.instr.raw_instr[24:20];
+    assign dataD.rs1 = dataF.instr.raw_instr[19:15];
+    assign dataD.rs2 = dataF.instr.raw_instr[24:20];
+    assign dataD.srca = fwd_valid_a ? fwd_aluout : rd1;
+    assign dataD.srcb = fwd_valid_b ? fwd_aluout : rd2;
 
 endmodule
 

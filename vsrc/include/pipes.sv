@@ -14,7 +14,8 @@ parameter OPCODE_RTYPE = 7'b0110011;    // R-type 指令的 opcode
 parameter OPCODE_ITYPE = 7'b0010011;    // I-type 指令的 opcode
 parameter OPCODE_LOAD = 7'b0000011;     // Load 指令的 opcode
 parameter OPCODE_STORE = 7'b0100011;    // Store 指令的 opcode
-parameter OPCODE_OPIMM = 7'b0011011;    // 扩展的 I-type 指令的 opcode
+parameter OPCODE_ITYPEM = 7'b0011011;    // 扩展的 I-type 指令的 opcode
+parameter OPCODE_RTYPEM = 7'b0111011;    // 扩展的 R-type 指令的 opcode
 
 parameter FUNC3_ADD = 3'b000;           // funct3: ADD
 parameter FUNC3_XOR = 3'b100;           // funct3: XOR
@@ -30,7 +31,8 @@ parameter FUNC7_ADD = 7'b0000000;       // funct7: ADD
 /* Define pipeline structures here */
 
 typedef enum logic [4:0] {
-	NOP, ALU_ADD, ALU_SUB, ALU_XOR, ALU_OR, ALU_AND
+	NOP, ALU_ADD, ALU_SUB, ALU_XOR, ALU_OR, ALU_AND,
+	ALU_ADDW, ALU_SUBW
 } alu_op_t;
 
 typedef struct packed {
@@ -39,6 +41,7 @@ typedef struct packed {
 	u1 alusrc;
 	u1 mem_read, mem_write;
 	u1 mem_to_reg;
+	u1 is_word;
 } control_t;
 
 typedef struct packed {
@@ -47,13 +50,13 @@ typedef struct packed {
 } instr_data_t;
 
 typedef struct packed {
-	u32 raw_instr;
 	instr_data_t instr;
 	word_t pcplus4;
 } fetch_data_t;
 
 typedef struct packed {
 	word_t srca, srcb;
+	creg_addr_t rs1, rs2;
 	word_t imm;
 	control_t ctl;
 	creg_addr_t dst;
@@ -69,18 +72,23 @@ typedef struct packed {
 
 typedef struct packed {
 	control_t ctl;
-	word_t memout;
-	word_t aluout;
+	word_t writedata;
 	creg_addr_t dst;
 	instr_data_t instr;
 } mem_data_t;
 
+// typedef struct packed {
+// 	control_t ctl;
+// 	word_t writedata;
+// 	creg_addr_t dst;
+// 	instr_data_t instr;
+// } wb_data_t;
+
 typedef struct packed {
-	control_t ctl;
-	word_t writedata;
 	creg_addr_t dst;
-	instr_data_t instr;
-} wb_data_t;
+	word_t data;
+	u1 valid;
+} fwd_data_t;
 
 
 endpackage

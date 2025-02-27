@@ -15,6 +15,9 @@
 `include "src/regfile.sv"
 `include "src/alu.sv"
 `include "src/decoder.sv"
+`include "src/memory.sv"
+`include "src/forward.sv"
+// `include "src/mux.sv"
 `endif
 
 module core
@@ -29,17 +32,15 @@ module core
 );
 	/* TODO: Add your CPU-Core here. */
 	u1 stallpc;
-
 	assign stallpc = ireq.valid && ~iresp.data_ok;
-
 	u1 stallF, stallD, stallE, stallM, stallW;
 	u1 flushF, flushD, flushE, flushM, flushW;
 
 	// for test
-	assign stallF = 0;
-	assign stallD = 0;
-	assign stallE = 0;
-	assign stallM = 0;
+	assign stallF = stallpc;
+	assign stallD = stallF;
+	assign stallE = stallD;
+	assign stallM = stallE;
 
 	assign flushF = 0;
 	assign flushD = 0;
@@ -61,13 +62,18 @@ module core
 	decode_data_t 	dataD, dataD_nxt;
 	exec_data_t 	dataE, dataE_nxt;
 	mem_data_t 		dataM, dataM_nxt;
-	wb_data_t 		dataW;
+	// wb_data_t 		dataW;
 
-	word_t writedata;
+	word_t memout = dresp.data;
 	word_t regs_nxt[31:0];
 
 	creg_addr_t ra1, ra2;
 	word_t rd1, rd2;
+
+	word_t fwd_aluout;
+	u1 fwd_valid_a, fwd_valid_b;
+
+	// word_t alusrca, alusrcb;
 
 
 	always_ff @(posedge clk) begin
@@ -140,7 +146,10 @@ module core
 		.ra1   (ra1),
 		.ra2   (ra2),
 		.rd1   (rd1),
-		.rd2   (rd2)
+		.rd2   (rd2),
+		.fwd_valid_a (fwd_valid_a),
+		.fwd_valid_b (fwd_valid_b),
+		.fwd_aluout  (fwd_aluout)
 	);
 
 	execute execute(
@@ -158,63 +167,81 @@ module core
 		.rd2    (rd2),
 		.wvalid (dataM.ctl.reg_write),
 		.wa     (dataM.dst),
-		.wd     (writedata),
-		.regs_nxt(regs_nxt)
+		.wd     (dataM.writedata)
 	);
 
-	assign writedata = dataM.ctl.mem_to_reg ? dataM.memout : dataM.aluout;
+	memory memory(
+		.dataE  (dataE),
+		.memout (memout),
+		.aluout (dataE.aluout),
+		.dataM  (dataM_nxt)
+	);
+
+	forward forward(
+		.clk	(clk),
+		.reset  (reset),
+		.aluout (dataE_nxt.aluout),
+		.dst    (dataE_nxt.dst),
+		.dst_valid (dataE_nxt.ctl.reg_write),
+		.srca    (ra1),
+		.srcb    (ra2),
+		.alusrc  (dataD.ctl.alusrc),
+		.fwd_aluout (fwd_aluout),
+		.fwd_valid_a (fwd_valid_a),
+		.fwd_valid_b (fwd_valid_b)
+	);
 
 `ifdef VERILATOR
 	DifftestInstrCommit DifftestInstrCommit(
 		.clock              (clk),
 		.coreid             (0),
 		.index              (0),
-		.valid              (!stall),
-		.pc                 (pc),
-		.instr              (0),
+		.valid              (!stallpc),
+		.pc                 (dataM.instr.pc),
+		.instr              (dataM.instr.raw_instr),
 		.skip               (0),
 		.isRVC              (0),
 		.scFailed           (0),
 		.wen                (dataM.ctl.reg_write),
-		.wdest              ({3'b0, dataM.dst}),
-		.wdata              (0)
+		.wdest              ({3'b000, dataM.dst}),
+		.wdata              (dataM.writedata)
 	);
 
 	DifftestArchIntRegState DifftestArchIntRegState (
 		.clock              (clk),
 		.coreid             (0),
-		.gpr_0              (regs_nxt[0]),  // 寄存器x0（硬编码为0）
-		.gpr_1              (regs_nxt[1]),  // 寄存器x1
-		.gpr_2              (regs_nxt[2]),  // 寄存器x2
-		.gpr_3              (regs_nxt[3]),  // 寄存器x3
-		.gpr_4              (regs_nxt[4]),  // 寄存器x4
-		.gpr_5              (regs_nxt[5]),  // 寄存器x5
-		.gpr_6              (regs_nxt[6]),  // 寄存器x6
-		.gpr_7              (regs_nxt[7]),  // 寄存器x7
-		.gpr_8              (regs_nxt[8]),  // 寄存器x8
-		.gpr_9              (regs_nxt[9]),  // 寄存器x9
-		.gpr_10             (regs_nxt[10]), // 寄存器x10
-		.gpr_11             (regs_nxt[11]), // 寄存器x11
-		.gpr_12             (regs_nxt[12]), // 寄存器x12
-		.gpr_13             (regs_nxt[13]), // 寄存器x13
-		.gpr_14             (regs_nxt[14]), // 寄存器x14
-		.gpr_15             (regs_nxt[15]), // 寄存器x15
-		.gpr_16             (regs_nxt[16]), // 寄存器x16
-		.gpr_17             (regs_nxt[17]), // 寄存器x17
-		.gpr_18             (regs_nxt[18]), // 寄存器x18
-		.gpr_19             (regs_nxt[19]), // 寄存器x19
-		.gpr_20             (regs_nxt[20]), // 寄存器x20
-		.gpr_21             (regs_nxt[21]), // 寄存器x21
-		.gpr_22             (regs_nxt[22]), // 寄存器x22
-		.gpr_23             (regs_nxt[23]), // 寄存器x23
-		.gpr_24             (regs_nxt[24]), // 寄存器x24
-		.gpr_25             (regs_nxt[25]), // 寄存器x25
-		.gpr_26             (regs_nxt[26]), // 寄存器x26
-		.gpr_27             (regs_nxt[27]), // 寄存器x27
-		.gpr_28             (regs_nxt[28]), // 寄存器x28
-		.gpr_29             (regs_nxt[29]), // 寄存器x29
-		.gpr_30             (regs_nxt[30]), // 寄存器x30
-		.gpr_31             (regs_nxt[31])  // 寄存器x31
+		.gpr_0              (regfile.regs_nxt[0]),
+		.gpr_1              (regfile.regs_nxt[1]),
+		.gpr_2              (regfile.regs_nxt[2]),
+		.gpr_3              (regfile.regs_nxt[3]),
+		.gpr_4              (regfile.regs_nxt[4]),
+		.gpr_5              (regfile.regs_nxt[5]),
+		.gpr_6              (regfile.regs_nxt[6]),
+		.gpr_7              (regfile.regs_nxt[7]),
+		.gpr_8              (regfile.regs_nxt[8]),
+		.gpr_9              (regfile.regs_nxt[9]),
+		.gpr_10             (regfile.regs_nxt[10]),
+		.gpr_11             (regfile.regs_nxt[11]),
+		.gpr_12             (regfile.regs_nxt[12]),
+		.gpr_13             (regfile.regs_nxt[13]),
+		.gpr_14             (regfile.regs_nxt[14]),
+		.gpr_15             (regfile.regs_nxt[15]),
+		.gpr_16             (regfile.regs_nxt[16]),
+		.gpr_17             (regfile.regs_nxt[17]),
+		.gpr_18             (regfile.regs_nxt[18]),
+		.gpr_19             (regfile.regs_nxt[19]),
+		.gpr_20             (regfile.regs_nxt[20]),
+		.gpr_21             (regfile.regs_nxt[21]),
+		.gpr_22             (regfile.regs_nxt[22]),
+		.gpr_23             (regfile.regs_nxt[23]),
+		.gpr_24             (regfile.regs_nxt[24]),
+		.gpr_25             (regfile.regs_nxt[25]),
+		.gpr_26             (regfile.regs_nxt[26]),
+		.gpr_27             (regfile.regs_nxt[27]),
+		.gpr_28             (regfile.regs_nxt[28]),
+		.gpr_29             (regfile.regs_nxt[29]),
+		.gpr_30             (regfile.regs_nxt[30]),
+		.gpr_31             (regfile.regs_nxt[31])
 	);
 
     DifftestTrapEvent DifftestTrapEvent(
