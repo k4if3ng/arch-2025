@@ -64,8 +64,8 @@ module core
 	mem_data_t 		dataM, dataM_nxt;
 	// wb_data_t 		dataW;
 
-	word_t memout = dresp.data;
-	word_t regs_nxt[31:0];
+	// word_t memout = dresp.data;
+	// word_t regs_nxt[31:0];
 
 	creg_addr_t ra1, ra2;
 	word_t rd1, rd2;
@@ -73,8 +73,18 @@ module core
 	word_t fwd_aluout;
 	u1 fwd_valid_a, fwd_valid_b;
 
-	// word_t alusrca, alusrcb;
+	word_t fwd_aluout_;
+	u1 fwd_valid_a_, fwd_valid_b_;
+	
+	word_t alusrca, alusrcb;
 
+	assign alusrca = fwd_valid_a_ ? fwd_aluout_ : fwd_valid_a ? fwd_aluout : dataD.srca;
+	assign alusrcb = fwd_valid_b_ ? fwd_aluout_ : fwd_valid_b ? fwd_aluout : dataD.ctl.alusrc ? dataD.imm : dataD.srcb;
+
+
+	u1 is_word;
+
+	assign is_word = 0;
 
 	always_ff @(posedge clk) begin
 		if (reset) begin
@@ -149,11 +159,17 @@ module core
 		.rd2   (rd2),
 		.fwd_valid_a (fwd_valid_a),
 		.fwd_valid_b (fwd_valid_b),
-		.fwd_aluout  (fwd_aluout)
+		.fwd_aluout  (fwd_aluout),
+		.fwd_valid_a_ (fwd_valid_a_),
+		.fwd_valid_b_ (fwd_valid_b_),
+		.fwd_aluout_  (fwd_aluout_)
 	);
 
 	execute execute(
+		// .alusrca(alusrca),
+		// .alusrcb(alusrcb),
 		.dataD (dataD),
+		// .is_word(is_word),
 		.dataE (dataE_nxt)
 	);
 
@@ -172,24 +188,39 @@ module core
 
 	memory memory(
 		.dataE  (dataE),
-		.memout (memout),
+		.memout (0),
 		.aluout (dataE.aluout),
 		.dataM  (dataM_nxt)
 	);
 
-	forward forward(
-		.clk	(clk),
-		.reset  (reset),
+	forward ex_forward(
+		// .clk	(clk),
+		// .reset  (reset),
 		.aluout (dataE_nxt.aluout),
 		.dst    (dataE_nxt.dst),
 		.dst_valid (dataE_nxt.ctl.reg_write),
 		.srca    (ra1),
 		.srcb    (ra2),
-		.alusrc  (dataD.ctl.alusrc),
+		.alusrc  (0),
 		.fwd_aluout (fwd_aluout),
 		.fwd_valid_a (fwd_valid_a),
 		.fwd_valid_b (fwd_valid_b)
 	);
+
+	forward mem_forward(
+		// .clk	(clk),
+		// .reset  (reset),
+		.aluout (dataM_nxt.writedata),
+		.dst    (dataM_nxt.dst),
+		.dst_valid (dataM_nxt.ctl.reg_write),
+		.srca    (ra1),
+		.srcb    (ra2),
+		.alusrc  (0),
+		.fwd_aluout (fwd_aluout_),
+		.fwd_valid_a (fwd_valid_a_),
+		.fwd_valid_b (fwd_valid_b_)
+	);
+
 
 `ifdef VERILATOR
 	DifftestInstrCommit DifftestInstrCommit(

@@ -22,31 +22,38 @@ module decoder
 
     always_comb begin
         ctl = '0;
+        ctl.is_word = 0;
         case (opcode)
             OPCODE_RTYPE: begin
                 case (f3)
                     FUNC3_ADD: begin
                         if (f7 == FUNC7_SUB) begin
                             ctl.aluop = ALU_SUB;
+                            ctl.op = SUB;
                         end else begin
                             ctl.aluop = ALU_ADD;
+                            ctl.op = ADD;
                         end
                         ctl.reg_write = 1;
                     end
                     FUNC3_XOR: begin
                         ctl.aluop = ALU_XOR;
                         ctl.reg_write = 1;
+                        ctl.op = XOR;
                     end
                     FUNC3_OR: begin
                         ctl.aluop = ALU_OR;
                         ctl.reg_write = 1;
+                        ctl.op = OR;
                     end
                     FUNC3_AND: begin
                         ctl.aluop = ALU_AND;
                         ctl.reg_write = 1;
+                        ctl.op = AND;
                     end
                     default: begin
                         ctl.aluop = NOP;
+                        ctl.op = UNKNOWN;
                     end
                 endcase
             end
@@ -58,24 +65,29 @@ module decoder
                         ctl.aluop = ALU_ADD;
                         ctl.reg_write = 1;
                         ctl.alusrc = 1;
+                        ctl.op = ADDI;
                     end
                     FUNC3_XORI: begin
                         ctl.aluop = ALU_XOR;
                         ctl.reg_write = 1;
                         ctl.alusrc = 1;
+                        ctl.op = XORI;
                     end
                     FUNC3_ORI: begin
                         ctl.aluop = ALU_OR;
                         ctl.reg_write = 1;
                         ctl.alusrc = 1;
+                        ctl.op = ORI;
                     end
                     FUNC3_ANDI: begin
                         ctl.aluop = ALU_AND;
                         ctl.reg_write = 1;
                         ctl.alusrc = 1;
+                        ctl.op = ANDI;
                     end
                     default: begin
                         ctl.aluop = NOP;
+                        ctl.op = UNKNOWN;
                     end
                 endcase
             end
@@ -85,14 +97,17 @@ module decoder
                     FUNC3_ADD: begin
                         if (f7 == FUNC7_SUB) begin
                             ctl.aluop = ALU_SUB;
+                            ctl.op = SUBW;
                         end else begin
                             ctl.aluop = ALU_ADD;
+                            ctl.op = ADDW;
                         end
                         ctl.reg_write = 1;
                         ctl.is_word = 1;
                     end
                     default: begin
                         ctl.aluop = NOP;
+                        ctl.op = UNKNOWN;
                     end
                 endcase
             end
@@ -105,9 +120,11 @@ module decoder
                         ctl.reg_write = 1;
                         ctl.alusrc = 1;
                         ctl.is_word = 1;
+                        ctl.op = ADDIW;
                     end
                     default: begin
                         ctl.aluop = NOP;
+                        ctl.op = UNKNOWN;
                     end
                 endcase
             end

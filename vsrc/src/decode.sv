@@ -19,7 +19,10 @@ module decode
     input word_t       rd1, rd2,
 
     input u1            fwd_valid_a, fwd_valid_b,
-    input word_t        fwd_aluout
+    input word_t        fwd_aluout,
+
+    input u1            fwd_valid_a_, fwd_valid_b_,
+    input word_t        fwd_aluout_
 );
 
     control_t ctl;
@@ -37,8 +40,11 @@ module decode
     assign ra2 = dataF.instr.raw_instr[24:20];
     assign dataD.rs1 = dataF.instr.raw_instr[19:15];
     assign dataD.rs2 = dataF.instr.raw_instr[24:20];
-    assign dataD.srca = fwd_valid_a ? fwd_aluout : rd1;
-    assign dataD.srcb = fwd_valid_b ? fwd_aluout : rd2;
+    assign dataD.srca = fwd_valid_a ? fwd_aluout : fwd_valid_a_ ? fwd_aluout_ : rd1;
+    assign dataD.srcb = fwd_valid_b ? fwd_aluout : fwd_valid_b_ ? fwd_aluout_ : rd2;
+    // assign dataD.srca = rd1;
+    // assign dataD.srcb = rd2;
+    // assign dataD.imm = dataF.instr.raw_instr[31:20];
 
 endmodule
 

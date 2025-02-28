@@ -12,7 +12,7 @@
 module forward
     import common::*;
     import pipes::*;(
-    input  logic        clk, reset,
+    // input  logic        clk, reset,
     input  word_t       aluout,
     input  creg_addr_t  dst,
     input  u1           dst_valid,
@@ -32,8 +32,8 @@ module forward
     //     end
     // end
 
-    assign fwd_valid_a = dst_valid && (dst == srca);
-    assign fwd_valid_b = dst_valid && (dst == srcb) && ~alusrc;
+    assign fwd_valid_a = dst_valid && (dst == srca) && (dst != 0);
+    assign fwd_valid_b = dst_valid && (dst == srcb) && (dst != 0) && ~alusrc;
     assign fwd_aluout = aluout;
 
 endmodule

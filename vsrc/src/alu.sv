@@ -10,12 +10,13 @@ module alu
     import common::*;
     import pipes::*;(
     input word_t      srca, srcb,
+    // input u1          is_word,
     input alu_op_t    aluop,
     output word_t     aluout
 );
 
-    shamt_t shamt;
-    assign shamt = srca[4:0];
+    // shamt_t shamt;
+    // assign shamt = srca[4:0];
     // arith_t temp;
 
     always_comb begin
