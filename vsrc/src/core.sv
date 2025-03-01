@@ -17,7 +17,6 @@
 `include "src/decoder.sv"
 `include "src/memory.sv"
 `include "src/forward.sv"
-// `include "src/mux.sv"
 `endif
 
 module core
@@ -30,8 +29,8 @@ module core
 	input  dbus_resp_t dresp,
 	input  logic       trint, swint, exint
 );
-	/* TODO: Add your CPU-Core here. */
-	u1 stallpc;
+	
+u1 stallpc;
 	assign stallpc = ireq.valid && ~iresp.data_ok;
 	
 	u1 stallF, stallD, stallE, stallM, stallW;
@@ -64,16 +63,9 @@ module core
 	creg_addr_t ra1, ra2;
 	word_t rd1, rd2;
 
+	// forward data
 	word_t fwd_data_a, fwd_data_b;
 	u1 fwd_valid_a, fwd_valid_b;
-
-	// word_t mem_fwd_data;
-	// u1 mem_fwd_a, mem_fwd_b;
-	
-	// word_t alusrca, alusrcb;
-	
-	// assign alusrca = ex_fwd_a ? ex_fwd_data : mem_fwd_a ? mem_fwd_data : dataD.srca;
-	// assign alusrcb = ex_fwd_b ? ex_fwd_data : mem_fwd_b ? mem_fwd_data : dataD.ctl.alusrc ? dataD.imm : dataD.srcb;
 
 	// updata pc
 	always_ff @(posedge clk) begin
@@ -151,19 +143,12 @@ module core
 		.fwd_valid_b (fwd_valid_b),
 		.fwd_data_a  (fwd_data_a),
 		.fwd_data_b  (fwd_data_b)
-		// .fwd_valid_a_ (fwd_valid_a_),
-		// .fwd_valid_b_ (fwd_valid_b_),
-		// .mem_fwd_data  (ex_fwd_data_)
-
 	);
 
 	execute execute(
-		// .alusrca (dataD.srca),
-		// .alusrcb (dataD.ctl.alusrc ? dataD.imm : dataD.srcb),
 		.dataD (dataD),
 		.dataE (dataE_nxt)
 	);
-
 
 	regfile regfile(
 		.clk    (clk),
@@ -177,6 +162,7 @@ module core
 		.wd     (dataM.writedata)
 	);
 
+	// lab1 don't read/write memory
 	memory memory(
 		.dataE  (dataE),
 		.memout (0),
@@ -186,10 +172,10 @@ module core
 
 	forward forward(
 		.ex_fwd_data  (dataE_nxt.aluout),
-		.ex_fwd_valid (1),
+		.ex_fwd_valid (dataE.ctl.reg_write && !dataE_nxt.ctl.mem_to_reg),
 		.ex_dst	      (dataE_nxt.dst),
 		.mem_fwd_data  (dataM_nxt.writedata),
-		.mem_fwd_valid (1),
+		.mem_fwd_valid (dataM_nxt.ctl.reg_write),
 		.mem_dst       (dataM_nxt.dst),
 		.srca (ra1),
 		.srcb (ra2),
@@ -198,29 +184,6 @@ module core
 		.fwd_valid_a (fwd_valid_a),
 		.fwd_valid_b (fwd_valid_b)
 	);
-
-	// forward ex_forward(
-	// 	.aluout (dataE.aluout),
-	// 	.dst    (dataE.dst),
-	// 	.dst_valid (dataE.ctl.reg_write),
-	// 	.srca    (dataD.rs1),
-	// 	.srcb    (dataD.rs2),
-	// 	.fwd_data (ex_fwd_data),
-	// 	.fwd_valid_a (ex_fwd_a),
-	// 	.fwd_valid_b (ex_fwd_b)
-	// );
-
-	// forward mem_forward(
-	// 	.aluout (dataM.writedata),
-	// 	.dst    (dataM.dst),
-	// 	.dst_valid (dataM.ctl.reg_write),
-	// 	.srca    (dataD.rs1),
-	// 	.srcb    (dataD.rs2),
-	// 	.fwd_data (mem_fwd_data),
-	// 	.fwd_valid_a (mem_fwd_a),
-	// 	.fwd_valid_b (mem_fwd_b)
-	// );
-
 
 `ifdef VERILATOR
 	DifftestInstrCommit DifftestInstrCommit(
