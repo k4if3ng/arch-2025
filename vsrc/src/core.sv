@@ -30,7 +30,7 @@ module core
 	input  logic       trint, swint, exint
 );
 	
-u1 stallpc;
+	u1 stallpc;
 	assign stallpc = ireq.valid && ~iresp.data_ok;
 	
 	u1 stallF, stallD, stallE, stallM, stallW;
