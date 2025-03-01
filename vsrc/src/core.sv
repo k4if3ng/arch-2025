@@ -33,15 +33,15 @@ module core
 	/* TODO: Add your CPU-Core here. */
 	u1 stallpc;
 	assign stallpc = ireq.valid && ~iresp.data_ok;
+	
 	u1 stallF, stallD, stallE, stallM, stallW;
 	u1 flushF, flushD, flushE, flushM, flushW;
 
-	// for test
+	// in lab1, this works
 	assign stallF = stallpc;
 	assign stallD = stallF;
 	assign stallE = stallD;
 	assign stallM = stallE;
-
 	assign flushF = 0;
 	assign flushD = 0;
 	assign flushE = 0;
@@ -51,41 +51,31 @@ module core
 
 	assign ireq.valid = 1'b1;
 	assign ireq.addr  = pc;
-
 	assign dreq.valid = 1'b0;
 
 	u32 raw_instr;
-
 	assign raw_instr = iresp.data;
 
 	fetch_data_t 	dataF, dataF_nxt;
 	decode_data_t 	dataD, dataD_nxt;
 	exec_data_t 	dataE, dataE_nxt;
 	mem_data_t 		dataM, dataM_nxt;
-	// wb_data_t 		dataW;
-
-	// word_t memout = dresp.data;
-	// word_t regs_nxt[31:0];
 
 	creg_addr_t ra1, ra2;
 	word_t rd1, rd2;
 
-	word_t fwd_aluout;
+	word_t fwd_data_a, fwd_data_b;
 	u1 fwd_valid_a, fwd_valid_b;
 
-	word_t fwd_aluout_;
-	u1 fwd_valid_a_, fwd_valid_b_;
+	// word_t mem_fwd_data;
+	// u1 mem_fwd_a, mem_fwd_b;
 	
-	word_t alusrca, alusrcb;
+	// word_t alusrca, alusrcb;
+	
+	// assign alusrca = ex_fwd_a ? ex_fwd_data : mem_fwd_a ? mem_fwd_data : dataD.srca;
+	// assign alusrcb = ex_fwd_b ? ex_fwd_data : mem_fwd_b ? mem_fwd_data : dataD.ctl.alusrc ? dataD.imm : dataD.srcb;
 
-	assign alusrca = fwd_valid_a_ ? fwd_aluout_ : fwd_valid_a ? fwd_aluout : dataD.srca;
-	assign alusrcb = fwd_valid_b_ ? fwd_aluout_ : fwd_valid_b ? fwd_aluout : dataD.ctl.alusrc ? dataD.imm : dataD.srcb;
-
-
-	u1 is_word;
-
-	assign is_word = 0;
-
+	// updata pc
 	always_ff @(posedge clk) begin
 		if (reset) begin
 			pc <= PCINIT;
@@ -159,17 +149,18 @@ module core
 		.rd2   (rd2),
 		.fwd_valid_a (fwd_valid_a),
 		.fwd_valid_b (fwd_valid_b),
-		.fwd_aluout  (fwd_aluout),
-		.fwd_valid_a_ (fwd_valid_a_),
-		.fwd_valid_b_ (fwd_valid_b_),
-		.fwd_aluout_  (fwd_aluout_)
+		.fwd_data_a  (fwd_data_a),
+		.fwd_data_b  (fwd_data_b)
+		// .fwd_valid_a_ (fwd_valid_a_),
+		// .fwd_valid_b_ (fwd_valid_b_),
+		// .mem_fwd_data  (ex_fwd_data_)
+
 	);
 
 	execute execute(
-		// .alusrca(alusrca),
-		// .alusrcb(alusrcb),
+		// .alusrca (dataD.srca),
+		// .alusrcb (dataD.ctl.alusrc ? dataD.imm : dataD.srcb),
 		.dataD (dataD),
-		// .is_word(is_word),
 		.dataE (dataE_nxt)
 	);
 
@@ -193,33 +184,42 @@ module core
 		.dataM  (dataM_nxt)
 	);
 
-	forward ex_forward(
-		// .clk	(clk),
-		// .reset  (reset),
-		.aluout (dataE_nxt.aluout),
-		.dst    (dataE_nxt.dst),
-		.dst_valid (dataE_nxt.ctl.reg_write),
-		.srca    (ra1),
-		.srcb    (ra2),
-		.alusrc  (0),
-		.fwd_aluout (fwd_aluout),
+	forward forward(
+		.ex_fwd_data  (dataE_nxt.aluout),
+		.ex_fwd_valid (1),
+		.ex_dst	      (dataE_nxt.dst),
+		.mem_fwd_data  (dataM_nxt.writedata),
+		.mem_fwd_valid (1),
+		.mem_dst       (dataM_nxt.dst),
+		.srca (ra1),
+		.srcb (ra2),
+		.fwd_data_a (fwd_data_a),
+		.fwd_data_b (fwd_data_b),
 		.fwd_valid_a (fwd_valid_a),
 		.fwd_valid_b (fwd_valid_b)
 	);
 
-	forward mem_forward(
-		// .clk	(clk),
-		// .reset  (reset),
-		.aluout (dataM_nxt.writedata),
-		.dst    (dataM_nxt.dst),
-		.dst_valid (dataM_nxt.ctl.reg_write),
-		.srca    (ra1),
-		.srcb    (ra2),
-		.alusrc  (0),
-		.fwd_aluout (fwd_aluout_),
-		.fwd_valid_a (fwd_valid_a_),
-		.fwd_valid_b (fwd_valid_b_)
-	);
+	// forward ex_forward(
+	// 	.aluout (dataE.aluout),
+	// 	.dst    (dataE.dst),
+	// 	.dst_valid (dataE.ctl.reg_write),
+	// 	.srca    (dataD.rs1),
+	// 	.srcb    (dataD.rs2),
+	// 	.fwd_data (ex_fwd_data),
+	// 	.fwd_valid_a (ex_fwd_a),
+	// 	.fwd_valid_b (ex_fwd_b)
+	// );
+
+	// forward mem_forward(
+	// 	.aluout (dataM.writedata),
+	// 	.dst    (dataM.dst),
+	// 	.dst_valid (dataM.ctl.reg_write),
+	// 	.srca    (dataD.rs1),
+	// 	.srcb    (dataD.rs2),
+	// 	.fwd_data (mem_fwd_data),
+	// 	.fwd_valid_a (mem_fwd_a),
+	// 	.fwd_valid_b (mem_fwd_b)
+	// );
 
 
 `ifdef VERILATOR
@@ -227,7 +227,7 @@ module core
 		.clock              (clk),
 		.coreid             (0),
 		.index              (0),
-		.valid              (!stallpc),
+		.valid              (!stallM),
 		.pc                 (dataM.instr.pc),
 		.instr              (dataM.instr.raw_instr),
 		.skip               (0),
