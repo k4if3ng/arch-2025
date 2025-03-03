@@ -6,70 +6,37 @@
 `include "include/pipes.sv"
 `endif
 
-// only aluout now
-// ex_to_ex
-
 module forward
     import common::*;
-    import pipes::*;(
-    // input  logic        clk, reset,
-    // input  word_t       aluout,
-    // input  creg_addr_t  dst,
-    // input  u1           dst_valid,
-    // input  creg_addr_t  srca, srcb,
-    // output word_t       fwd_data,
-    // output u1           fwd_valid_a, fwd_valid_b
-    input word_t ex_fwd_data,
-    input u1 ex_fwd_valid,
-    input creg_addr_t ex_dst,
-    input word_t mem_fwd_data,
-    input u1 mem_fwd_valid,
-    input creg_addr_t mem_dst,
-    input  creg_addr_t srca,
-    input  creg_addr_t srcb,
-    output word_t fwd_data_a,
-    output word_t fwd_data_b,
-    output u1 fwd_valid_a,
-    output u1 fwd_valid_b
+    import pipes::*; (
+    input  fwd_data_t  ex_fwd,    // EX 阶段前递数据
+    input  fwd_data_t  mem_fwd,   // MEM 阶段前递数据
+    input  decode_t  decode,    // ID 阶段译码数据
+    output word_t    alusrca,   // ALU 源操作数 A
+    output word_t    alusrcb    // ALU 源操作数 B
 );
 
-    // always_ff @(posedge clk or posedge reset) begin
-    //     if (reset) begin
-    //         fwd_valid_a <= 0;
-    //         fwd_valid_b <= 0;
-    //     end else begin
-    //         fwd_valid_a <= dst_valid && (dst == srca);
-    //         fwd_valid_b <= dst_valid && (dst == srcb) && ~alusrc;
-    //     end
-    // end
-
-    // assign fwd_valid_a = dst_valid && (dst == srca) && (dst != 0);
-    // assign fwd_valid_b = dst_valid && (dst == srcb) && (dst != 0);
-    // assign fwd_data = aluout;
-
     always_comb begin
-        fwd_valid_a = 0;
-        fwd_valid_b = 0;
-        fwd_data_a = 0;
-        fwd_data_b = 0;
+        if (ex_fwd.valid && ex_fwd.dst == decode.rs1 && decode.rs1 != 0) begin
+            alusrca = ex_fwd.data;
+        end else if (mem_fwd.valid && mem_fwd.dst == decode.rs1 && decode.rs1 != 0) begin
+            alusrca = mem_fwd.data;
+        end else begin
+            alusrca = decode.srca;
+        end
 
-        if (mem_fwd_valid && mem_dst == srca && mem_dst != 0) begin
-            fwd_valid_a = 1;
-            fwd_data_a = mem_fwd_data;
-        end
-        if (mem_fwd_valid && mem_dst == srcb && mem_dst != 0) begin
-            fwd_valid_b = 1;
-            fwd_data_b = mem_fwd_data;
-        end
-        if (ex_fwd_valid && ex_dst == srca && ex_dst != 0) begin
-            fwd_valid_a = 1;
-            fwd_data_a = ex_fwd_data;
-        end
-        if (ex_fwd_valid && ex_dst == srcb && ex_dst != 0) begin
-            fwd_valid_b = 1;
-            fwd_data_b = ex_fwd_data;
+        if (decode.is_imm) begin
+            alusrcb = decode.imm;
+        end else if (ex_fwd.valid && ex_fwd.dst == decode.rs2 && decode.rs2 != 0) begin
+            alusrcb = ex_fwd.data;
+        end else if (mem_fwd.valid && mem_fwd.dst == decode.rs2 && decode.rs2 != 0) begin
+            alusrcb = mem_fwd.data;
+        end else begin
+            alusrcb = decode.srcb;
         end
     end
 
 endmodule
+
+
 `endif

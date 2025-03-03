@@ -64,25 +64,25 @@ module decoder
                     FUNC3_ADDI: begin
                         ctl.aluop = ALU_ADD;
                         ctl.reg_write = 1;
-                        ctl.alusrc = 1;
+                        ctl.is_imm = 1;
                         ctl.op = ADDI;
                     end
                     FUNC3_XORI: begin
                         ctl.aluop = ALU_XOR;
                         ctl.reg_write = 1;
-                        ctl.alusrc = 1;
+                        ctl.is_imm = 1;
                         ctl.op = XORI;
                     end
                     FUNC3_ORI: begin
                         ctl.aluop = ALU_OR;
                         ctl.reg_write = 1;
-                        ctl.alusrc = 1;
+                        ctl.is_imm = 1;
                         ctl.op = ORI;
                     end
                     FUNC3_ANDI: begin
                         ctl.aluop = ALU_AND;
                         ctl.reg_write = 1;
-                        ctl.alusrc = 1;
+                        ctl.is_imm = 1;
                         ctl.op = ANDI;
                     end
                     default: begin
@@ -92,7 +92,7 @@ module decoder
                 endcase
             end
 
-            OPCODE_RTYPEM: begin
+            OPCODE_RTYPEW: begin
                 case (f3)
                     FUNC3_ADD: begin
                         if (f7 == FUNC7_SUB) begin
@@ -112,13 +112,13 @@ module decoder
                 endcase
             end
 
-            OPCODE_ITYPEM: begin
+            OPCODE_ITYPEW: begin
                 imm = {{52{raw_instr[31]}}, raw_instr[31:20]};  // I-type 指令的立即数
                 case (f3)
                     FUNC3_ADDI: begin
                         ctl.aluop = ALU_ADD;
                         ctl.reg_write = 1;
-                        ctl.alusrc = 1;
+                        ctl.is_imm = 1;
                         ctl.is_word = 1;
                         ctl.op = ADDIW;
                     end

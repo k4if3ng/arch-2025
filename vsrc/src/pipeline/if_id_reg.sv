@@ -18,9 +18,7 @@ module if_id_reg
     always_ff @( posedge clk ) begin
         if (reset | flush) begin
             dataF <= '0;
-        end else if (stall) begin
-            dataF <= dataF;
-        end else if (enable) begin
+        end else if (~stall) begin
             dataF <= dataF_new;
         end
     end

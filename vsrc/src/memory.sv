@@ -17,13 +17,10 @@ module memory
 
     always_comb begin
         dataM.ctl = dataE.ctl;
-        dataM.rs1 = dataE.rs1;
-        dataM.rs2 = dataE.rs2;
         dataM.dst = dataE.dst;
         dataM.instr = dataE.instr;
         dataM.writedata = dataE.ctl.mem_to_reg ? memout : aluout;
     end
-
 
 endmodule
 `endif

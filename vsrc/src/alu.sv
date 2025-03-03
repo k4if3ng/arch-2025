@@ -10,7 +10,6 @@ module alu
     import common::*;
     import pipes::*;(
     input word_t      srca, srcb,
-    // input u1          is_word,
     input alu_op_t    aluop,
     output word_t     aluout
 );

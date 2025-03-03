@@ -15,7 +15,6 @@ module regfile
     input  logic        wvalid,
     input  creg_addr_t  wa,
     input  word_t       wd
-    // output word_t       regs_nxt [31:0]
 );
 
     word_t regs [31:0];
@@ -43,13 +42,8 @@ module regfile
         end
     end
 
-    // assign rd1 = (ra1 == 5'd0) ? 64'b0 : regs_nxt[ra1];
-    // assign rd2 = (ra2 == 5'd0) ? 64'b0 : regs_nxt[ra2];
-
-    always_ff @(negedge clk) begin
-        rd1 <= (ra1 == 5'd0) ? 64'b0 : regs[ra1];
-        rd2 <= (ra2 == 5'd0) ? 64'b0 : regs[ra2];
-    end
+    assign rd1 = (ra1 == 5'd0) ? 64'b0 : regs_nxt[ra1];
+    assign rd2 = (ra2 == 5'd0) ? 64'b0 : regs_nxt[ra2];
 
 endmodule
 `endif

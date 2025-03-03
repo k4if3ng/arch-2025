@@ -11,18 +11,11 @@
 module pcselect 
     import common::*;
     import pipes::*;(
-
     input u64 pcplus4,
     output u64 pc_selected
-    
 );
 
-
-assign pc_selected = pcplus4;
-
+    assign pc_selected = pcplus4;
 
 endmodule
-
-
 `endif
-

@@ -7,15 +7,14 @@
 `include "src/fetch.sv"
 `include "src/decode.sv"
 `include "src/execute.sv"
-`include "src/if_id_reg.sv"
-`include "src/id_ex_reg.sv"
-`include "src/ex_mem_reg.sv"
-`include "src/mem_wb_reg.sv"
-`include "src/pcselect.sv"
-`include "src/regfile.sv"
-`include "src/alu.sv"
-`include "src/decoder.sv"
 `include "src/memory.sv"
+`include "src/pipeline/if_id_reg.sv"
+`include "src/pipeline/id_ex_reg.sv"
+`include "src/pipeline/ex_mem_reg.sv"
+`include "src/pipeline/mem_wb_reg.sv"
+`include "src/pcselect.sv"
+`include "src/pcupdate.sv"
+`include "src/regfile.sv"
 `include "src/forward.sv"
 `endif
 
@@ -63,21 +62,20 @@ module core
 	creg_addr_t ra1, ra2;
 	word_t rd1, rd2;
 
-	// forward data
-	word_t fwd_data_a, fwd_data_b;
-	u1 fwd_valid_a, fwd_valid_b;
+	word_t alusrca, alusrcb;
+
+	fwd_data_t ex_fwd_data, mem_fwd_data;
+	assign ex_fwd_data = {dataE.dst , dataE.aluout, dataE.ctl.reg_write};
+	assign mem_fwd_data = {dataM.dst, dataM.writedata, dataM.ctl.reg_write};
 
 	// updata pc
-	always_ff @(posedge clk) begin
-		if (reset) begin
-			pc <= PCINIT;
-		end else if (stallpc) begin
-			pc <= pc;
-		end else begin
-			pc <= pc_nxt;
-		end
-	end
-
+	pcupdate pcupdate(
+		.clk(clk),
+		.reset(reset),
+		.stall(stallpc),
+		.pc_nxt(pc_nxt),
+		.pc(pc)
+	);
 
 	if_id_reg if_id_reg(
 		.clk	(clk),
@@ -138,14 +136,12 @@ module core
 		.ra1   (ra1),
 		.ra2   (ra2),
 		.rd1   (rd1),
-		.rd2   (rd2),
-		.fwd_valid_a (fwd_valid_a),
-		.fwd_valid_b (fwd_valid_b),
-		.fwd_data_a  (fwd_data_a),
-		.fwd_data_b  (fwd_data_b)
+		.rd2   (rd2)
 	);
 
 	execute execute(
+		.alusrca (alusrca),
+		.alusrcb (alusrcb),
 		.dataD (dataD),
 		.dataE (dataE_nxt)
 	);
@@ -170,20 +166,14 @@ module core
 		.dataM  (dataM_nxt)
 	);
 
-	forward forward(
-		.ex_fwd_data  (dataE_nxt.aluout),
-		.ex_fwd_valid (dataE.ctl.reg_write && !dataE_nxt.ctl.mem_to_reg),
-		.ex_dst	      (dataE_nxt.dst),
-		.mem_fwd_data  (dataM_nxt.writedata),
-		.mem_fwd_valid (dataM_nxt.ctl.reg_write),
-		.mem_dst       (dataM_nxt.dst),
-		.srca (ra1),
-		.srcb (ra2),
-		.fwd_data_a (fwd_data_a),
-		.fwd_data_b (fwd_data_b),
-		.fwd_valid_a (fwd_valid_a),
-		.fwd_valid_b (fwd_valid_b)
+	forward forward (
+		.ex_fwd  	(fwd_data_t'({dataE.dst, dataE.aluout, dataE.ctl.reg_write && !dataE.ctl.mem_to_reg})),
+		.mem_fwd  	(fwd_data_t'({dataM.dst, dataM.writedata, dataM.ctl.reg_write})),
+		.decode 	(decode_t'({dataD.rs1, dataD.rs2, dataD.srca, dataD.srcb, dataD.imm, dataD.ctl.is_imm})),
+		.alusrca 	(alusrca),
+		.alusrcb 	(alusrcb)
 	);
+
 
 `ifdef VERILATOR
 	DifftestInstrCommit DifftestInstrCommit(
