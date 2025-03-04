@@ -64,11 +64,7 @@ module core
 
 	word_t alusrca, alusrcb;
 
-	fwd_data_t ex_fwd_data, mem_fwd_data;
-	assign ex_fwd_data = {dataE.dst , dataE.aluout, dataE.ctl.reg_write};
-	assign mem_fwd_data = {dataM.dst, dataM.writedata, dataM.ctl.reg_write};
 
-	// updata pc
 	pcupdate pcupdate(
 		.clk(clk),
 		.reset(reset),
