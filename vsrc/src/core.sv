@@ -158,7 +158,6 @@ module core
 	memory memory(
 		.dataE  (dataE),
 		.memout (0),
-		.aluout (dataE.aluout),
 		.dataM  (dataM_nxt)
 	);
 

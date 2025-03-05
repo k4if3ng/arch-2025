@@ -11,7 +11,6 @@ module memory
     import pipes::*;(
     input  exec_data_t  dataE,
     input  word_t       memout,
-    input  word_t       aluout,
     output mem_data_t   dataM
 );
 
@@ -19,7 +18,7 @@ module memory
         dataM.ctl = dataE.ctl;
         dataM.dst = dataE.dst;
         dataM.instr = dataE.instr;
-        dataM.writedata = dataE.ctl.mem_to_reg ? memout : aluout;
+        dataM.writedata = dataE.ctl.mem_to_reg ? memout : dataE.aluout;
     end
 
 endmodule
