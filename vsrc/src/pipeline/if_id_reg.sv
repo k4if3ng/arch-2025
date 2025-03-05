@@ -11,7 +11,7 @@ module if_id_reg
     import pipes::*;(
     input  logic        clk, reset,
     input  fetch_data_t dataF_nxt,
-    input  logic        enable, flush, stall,
+    input  logic        flush, stall,
     output fetch_data_t dataF
 );
 

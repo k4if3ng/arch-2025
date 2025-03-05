@@ -77,7 +77,6 @@ module core
 		.clk	(clk),
 		.reset  (reset),
 		.dataF_nxt(dataF_nxt),
-		.enable (1'b1),
 		.flush  (flushF),
 		.stall  (stallF),
 		.dataF  (dataF)
@@ -87,7 +86,6 @@ module core
 		.clk	(clk),
 		.reset  (reset),
 		.dataD_nxt(dataD_nxt),
-		.enable (1'b1),
 		.flush  (flushD),
 		.stall  (stallD),
 		.dataD  (dataD)
@@ -97,7 +95,6 @@ module core
 		.clk	(clk),
 		.reset  (reset),
 		.dataE_nxt(dataE_nxt),
-		.enable (1'b1),
 		.flush  (flushE),
 		.stall  (stallE),
 		.dataE  (dataE)
@@ -107,7 +104,6 @@ module core
 		.clk	(clk),
 		.reset  (reset),
 		.dataM_nxt(dataM_nxt),
-		.enable (1'b1),
 		.flush  (flushM),
 		.stall  (stallM),
 		.dataM  (dataM)
@@ -115,8 +111,6 @@ module core
 
 	fetch fetch(
 		.pc			(pc),
-		.flushF		(flushF),
-		.stallF		(stallF),
 		.raw_instr 	(raw_instr),
 		.dataF     	(dataF_nxt)
 	);

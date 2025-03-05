@@ -10,8 +10,6 @@ module fetch
     import common::*;
     import pipes::*;(
     input  word_t   pc,
-    input  u1       flushF,
-    input  u1       stallF,
     input  u32      raw_instr,
     output fetch_data_t dataF
 );
