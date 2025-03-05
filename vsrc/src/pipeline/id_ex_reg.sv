@@ -9,10 +9,10 @@
 module id_ex_reg
     import common::*;
     import pipes::*;(
-    input  logic        clk, reset,
-    input  decode_data_t dataD_new,
-    input  logic        enable, flush, stall,
-    output decode_data_t dataD
+    input  logic            clk, reset,
+    input  decode_data_t    dataD_nxt,
+    input  logic            enable, flush, stall,
+    output decode_data_t    dataD
 );
 
     always_ff @(posedge clk) begin
@@ -21,7 +21,7 @@ module id_ex_reg
         end else if (stall) begin
             dataD <= dataD;
         end else if (enable) begin
-            dataD <= dataD_new;
+            dataD <= dataD_nxt;
         end
     end
 

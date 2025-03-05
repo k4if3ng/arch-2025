@@ -24,10 +24,16 @@ module execute
         .aluout(aluout)
     );
 
-    assign dataE.dst = dataD.dst;
-    assign dataE.ctl = dataD.ctl;
-    assign dataE.instr = dataD.instr;
-    assign dataE.aluout = ~dataD.ctl.is_word ? aluout : {{32{aluout[31]}}, aluout[31:0]};
+    always_comb begin
+        dataE.ctl = dataD.ctl;
+        dataE.dst = dataD.dst;
+        dataE.instr = dataD.instr;
+        if (dataD.ctl.op inside {ADDW, SUBW, ADDIW}) begin
+            dataE.aluout = {{32{aluout[31]}}, aluout[31:0]};
+        end else begin
+            dataE.aluout = aluout;
+        end
+    end
 
 endmodule
 

@@ -10,7 +10,7 @@ module if_id_reg
     import common::*;
     import pipes::*;(
     input  logic        clk, reset,
-    input  fetch_data_t dataF_new,
+    input  fetch_data_t dataF_nxt,
     input  logic        enable, flush, stall,
     output fetch_data_t dataF
 );
@@ -19,7 +19,7 @@ module if_id_reg
         if (reset | flush) begin
             dataF <= '0;
         end else if (~stall) begin
-            dataF <= dataF_new;
+            dataF <= dataF_nxt;
         end
     end
 

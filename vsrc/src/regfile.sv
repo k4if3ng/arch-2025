@@ -12,7 +12,7 @@ module regfile
     input  logic        clk, reset,
     input  creg_addr_t  ra1, ra2,
     output word_t       rd1, rd2,
-    input  logic        wvalid,
+    input  logic        wen,
     input  creg_addr_t  wa,
     input  word_t       wd
 );
@@ -22,7 +22,7 @@ module regfile
 
     always_comb begin
         for (int i = 0; i < 32; i++) begin
-            if (wvalid && (i[4:0] == wa) && (wa != 0)) begin
+            if (wen && (i[4:0] == wa) && (wa != 0)) begin
                 regs_nxt[i[4:0]] = wd; // 用组合逻辑向next_reg写入
             end else begin
                 regs_nxt[i[4:0]] = regs[i[4:0]]; // 复制其他没有写入的寄存器

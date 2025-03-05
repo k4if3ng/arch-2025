@@ -16,7 +16,7 @@ module decode
     output decode_data_t dataD,
 
     output creg_addr_t  ra1, ra2,
-    input word_t       rd1, rd2
+    input  word_t       rd1, rd2
 );
 
     control_t ctl;

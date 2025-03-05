@@ -11,9 +11,9 @@
 module decoder
     import common::*;
     import pipes::*;(
-    input u32 raw_instr,
-    output word_t imm,
-    output control_t ctl
+    input  u32          raw_instr,
+    output word_t       imm,
+    output control_t    ctl
 );
 
     wire [6:0] opcode = raw_instr[6:0];
@@ -22,7 +22,6 @@ module decoder
 
     always_comb begin
         ctl = '0;
-        ctl.is_word = 0;
         case (opcode)
             OPCODE_RTYPE: begin
                 case (f3)
@@ -52,8 +51,7 @@ module decoder
                         ctl.op = AND;
                     end
                     default: begin
-                        ctl.aluop = NOP;
-                        ctl.op = UNKNOWN;
+                        ctl = 0;
                     end
                 endcase
             end
@@ -86,8 +84,7 @@ module decoder
                         ctl.op = ANDI;
                     end
                     default: begin
-                        ctl.aluop = NOP;
-                        ctl.op = UNKNOWN;
+                        ctl = 0;
                     end
                 endcase
             end
@@ -103,11 +100,9 @@ module decoder
                             ctl.op = ADDW;
                         end
                         ctl.reg_write = 1;
-                        ctl.is_word = 1;
                     end
                     default: begin
-                        ctl.aluop = NOP;
-                        ctl.op = UNKNOWN;
+                        ctl = 0;
                     end
                 endcase
             end
@@ -119,18 +114,16 @@ module decoder
                         ctl.aluop = ALU_ADD;
                         ctl.reg_write = 1;
                         ctl.is_imm = 1;
-                        ctl.is_word = 1;
                         ctl.op = ADDIW;
                     end
                     default: begin
-                        ctl.aluop = NOP;
-                        ctl.op = UNKNOWN;
+                        ctl = 0;
                     end
                 endcase
             end
 
             default: begin
-                ctl.aluop = NOP;
+                ctl = 0;
             end
         endcase
     end

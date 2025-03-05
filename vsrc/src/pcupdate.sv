@@ -11,8 +11,8 @@ module pcupdate
     import pipes::*;(
     input  logic        clk, reset,
     input  logic        stall,
-    input  word_t       pc_nxt,
-    output word_t       pc
+    input  u64          pc_nxt,
+    output u64          pc
 );
 
     always_ff @(posedge clk) begin

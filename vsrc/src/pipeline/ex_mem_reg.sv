@@ -10,9 +10,9 @@ module ex_mem_reg
     import common::*;
     import pipes::*;(
     input  logic        clk, reset,
-    input  exec_data_t dataE_new,
+    input  exec_data_t  dataE_nxt,
     input  logic        enable, flush, stall,
-    output exec_data_t dataE
+    output exec_data_t  dataE
 );
 
     always_ff @(posedge clk) begin
@@ -21,7 +21,7 @@ module ex_mem_reg
         end else if (stall) begin
             dataE <= dataE;
         end else if (enable) begin
-            dataE <= dataE_new;
+            dataE <= dataE_nxt;
         end
     end
 

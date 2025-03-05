@@ -11,7 +11,7 @@
 module pcselect 
     import common::*;
     import pipes::*;(
-    input u64 pcplus4,
+    input  u64 pcplus4,
     output u64 pc_selected
 );
 

@@ -15,7 +15,7 @@
 `include "src/pcselect.sv"
 `include "src/pcupdate.sv"
 `include "src/regfile.sv"
-`include "src/forward.sv"
+`include "src/forwarding.sv"
 `endif
 
 module core
@@ -76,7 +76,7 @@ module core
 	if_id_reg if_id_reg(
 		.clk	(clk),
 		.reset  (reset),
-		.dataF_new(dataF_nxt),
+		.dataF_nxt(dataF_nxt),
 		.enable (1'b1),
 		.flush  (flushF),
 		.stall  (stallF),
@@ -86,7 +86,7 @@ module core
 	id_ex_reg id_ex_reg(
 		.clk	(clk),
 		.reset  (reset),
-		.dataD_new(dataD_nxt),
+		.dataD_nxt(dataD_nxt),
 		.enable (1'b1),
 		.flush  (flushD),
 		.stall  (stallD),
@@ -96,7 +96,7 @@ module core
 	ex_mem_reg ex_mem_reg(
 		.clk	(clk),
 		.reset  (reset),
-		.dataE_new(dataE_nxt),
+		.dataE_nxt(dataE_nxt),
 		.enable (1'b1),
 		.flush  (flushE),
 		.stall  (stallE),
@@ -106,7 +106,7 @@ module core
 	mem_wb_reg mem_wb_reg(
 		.clk	(clk),
 		.reset  (reset),
-		.dataM_new(dataM_nxt),
+		.dataM_nxt(dataM_nxt),
 		.enable (1'b1),
 		.flush  (flushM),
 		.stall  (stallM),
@@ -149,7 +149,7 @@ module core
 		.ra2    (ra2),
 		.rd1    (rd1),
 		.rd2    (rd2),
-		.wvalid (dataM.ctl.reg_write),
+		.wen    (dataM.ctl.reg_write),
 		.wa     (dataM.dst),
 		.wd     (dataM.writedata)
 	);
@@ -162,7 +162,7 @@ module core
 		.dataM  (dataM_nxt)
 	);
 
-	forward forward (
+	forwarding forwarding (
 		.ex_fwd  	(fwd_data_t'({dataE.dst, dataE.aluout, dataE.ctl.reg_write && !dataE.ctl.mem_to_reg})),
 		.mem_fwd  	(fwd_data_t'({dataM.dst, dataM.writedata, dataM.ctl.reg_write})),
 		.decode 	(decode_t'({dataD.rs1, dataD.rs2, dataD.srca, dataD.srcb, dataD.imm, dataD.ctl.is_imm})),

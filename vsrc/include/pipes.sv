@@ -31,13 +31,14 @@ parameter FUNC7_ADD = 7'b0000000;       // funct7: ADD
 /* Define pipeline structures here */
 
 typedef enum logic [5:0] {
+	NOP,
 	ADD, SUB, XOR, OR, AND, ADDI, XORI, ORI, ANDI,
-	ADDW, SUBW, ADDIW, UNKNOWN
+	ADDW, SUBW, ADDIW
 } instr_op_t;
 
 typedef enum logic [4:0] {
-	NOP, ALU_ADD, ALU_SUB, ALU_XOR, ALU_OR, ALU_AND,
-	ALU_ADDW, ALU_SUBW
+	ALU_NOP, 
+	ALU_ADD, ALU_SUB, ALU_XOR, ALU_OR, ALU_AND
 } alu_op_t;
 
 typedef struct packed {
@@ -47,7 +48,6 @@ typedef struct packed {
 	u1 is_imm;
 	u1 mem_read, mem_write;
 	u1 mem_to_reg;
-	u1 is_word;
 } control_t;
 
 typedef struct packed {

@@ -6,14 +6,14 @@
 `include "include/pipes.sv"
 `endif
 
-module forward
+module forwarding
     import common::*;
     import pipes::*; (
-    input  fwd_data_t  ex_fwd,    // EX 阶段前递数据
-    input  fwd_data_t  mem_fwd,   // MEM 阶段前递数据
-    input  decode_t  decode,    // ID 阶段译码数据
-    output word_t    alusrca,   // ALU 源操作数 A
-    output word_t    alusrcb    // ALU 源操作数 B
+    input  fwd_data_t   ex_fwd,
+    input  fwd_data_t   mem_fwd,
+    input  decode_t     decode,
+    output word_t       alusrca,
+    output word_t       alusrcb
 );
 
     always_comb begin
