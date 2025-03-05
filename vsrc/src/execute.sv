@@ -10,7 +10,8 @@
 module execute
     import common::*;
     import pipes::*;(
-    input  word_t           alusrca, alusrcb,
+    input  word_t           alusrca, 
+    input  word_t           alusrcb,
     input  decode_data_t    dataD,
     output exec_data_t      dataE
 );

@@ -15,8 +15,10 @@ module decode
     input  fetch_data_t  dataF,
     output decode_data_t dataD,
 
-    output creg_addr_t  ra1, ra2,
-    input  word_t       rd1, rd2
+    output creg_addr_t  ra1, 
+    output creg_addr_t  ra2,
+    input  word_t       rd1, 
+    input  word_t       rd2
 );
 
     control_t ctl;
