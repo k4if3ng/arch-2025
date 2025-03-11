@@ -20,6 +20,7 @@ handin:
 	read lab_n; \
 	zip -q -r "docs/$$filename-lab$$lab_n.zip" \
 	  include vsrc docs/report.pdf
+	  include vsrc docs/report.pdf
 
 sim-verilog:
 	@echo "I don't know why, just make difftest happy..."
@@ -40,6 +41,12 @@ sim:
 
 test-lab1: sim
 	TEST=$(TEST) ./build/emu --diff $(NEMU_HOME)/riscv64-nemu-interpreter-so -i ./ready-to-run/lab1/lab1-test.bin $(VOPT) || true
+
+test-lab1-extra: sim
+	TEST=$(TEST) ./build/emu --diff $(NEMU_HOME)/riscv64-nemu-interpreter-so -i ./ready-to-run/lab1/lab1-extra-test.bin $(VOPT) || true
+
+test-lab2: sim
+	TEST=$(TEST) ./build/emu --diff $(NEMU_HOME)/riscv64-nemu-interpreter-so -i ./ready-to-run/lab2/lab2-test.bin $(VOPT) || true
 
 test-lab1-extra: sim
 	TEST=$(TEST) ./build/emu --diff $(NEMU_HOME)/riscv64-nemu-interpreter-so -i ./ready-to-run/lab1/lab1-extra-test.bin $(VOPT) || true

@@ -6,4 +6,6 @@ difftest/*
 *.out
 .gdb_history
 .vscode/
+resources/*
+docs/*
 .DS_Store
