@@ -29,16 +29,24 @@ module core
 	input  logic       trint, swint, exint
 );
 	
-u1 stallpc;
-assign stallpc = (ireq.valid & ~iresp.data_ok) | bubble;
+	u1 stallpc;
+	assign stallpc = (ireq.valid & ~iresp.data_ok) | bubble;
 
-u1 stall_inst, stall_data;
+	u1 stall_inst, stall_data;
 
-u1 stallF, stallD, stallE, stallM, stallW;
-u1 flushF, flushD, flushE, flushM, flushW;
+	u1 stallF, stallD, stallE, stallM, stallW;
+	u1 flushF, flushD, flushE, flushM, flushW;
+
+u1 load_use_hazard;
+// assign load_use_hazard = dataE.ctl.mem_to_reg && 
+//                          ((dataE.dst == dataD.rs1) || (dataE.dst == dataD.rs2));
+
+u1 load_use_hazard_a = dataE.ctl.mem_to_reg && (dataE.dst == dataD.rs1);
+u1 load_use_hazard_b = dataE.ctl.mem_to_reg && (dataE.dst == dataD.rs2);
+assign stallF = load_use_hazard | stallpc;
 
 	// in lab1, this works
-	assign stallF = stallpc;
+	// assign stallF = stallpc;
 	assign stallD = stallF;
 	assign stallE = stallD;
 	assign stallM = stallE;
@@ -70,6 +78,30 @@ u1 flushF, flushD, flushE, flushM, flushW;
 
 	mem_access_state_t mem_access_state;
 
+	word_t writedata;
+
+	always_comb begin
+		if (dataE.ctl.op == LW) begin
+			writedata = {{32{memout[31]}}, memout[31:0]};
+		end else if (dataE.ctl.op == LWU) begin
+			writedata = {32'b0, memout[31:0]};
+		end else if (dataE.ctl.op == LH) begin
+			writedata = {{48{memout[31]}}, memout[15:0]};
+		end else if (dataE.ctl.op == LHU) begin
+			writedata = {48'b0, memout[15:0]};
+		end else if (dataE.ctl.op == LH) begin
+			writedata = {{48{memout[31]}}, memout[15:0]};
+		end else if (dataE.ctl.op == LHU) begin
+			writedata = {48'b0, memout[15:0]};
+		end else if (dataE.ctl.op == LB) begin
+			writedata = {{56{memout[31]}}, memout[7:0]};
+		end else if (dataE.ctl.op == LBU) begin
+			writedata = {56'b0, memout[7:0]};
+		end else begin
+			writedata = memout;
+		end
+	end
+
 	always_ff @(posedge clk ) begin
 		if (reset) begin
 			mem_access_state <= IDLE;
@@ -83,6 +115,8 @@ u1 flushF, flushD, flushE, flushM, flushW;
 						mem_access_state <= WAITING;
 						bubble <= 1;
 					end
+					load_use_hazard <= dataE.ctl.mem_to_reg && 
+                          			   ((dataE.dst == dataD.rs1) || (dataE.dst == dataD.rs2));
 				end
 				WAITING: begin
 					if (dresp.data_ok) begin
@@ -92,6 +126,7 @@ u1 flushF, flushD, flushE, flushM, flushW;
 					end
 				end
 				OVER: begin
+					load_use_hazard <= 0;
 					if (!mem_access) begin
 						mem_access_state <= IDLE;
 					end
@@ -179,8 +214,8 @@ u1 flushF, flushD, flushE, flushM, flushW;
 	);
 
 	execute execute(
-		.alusrca (alusrca),
-		.alusrcb (alusrcb),
+		.alusrca (load_use_hazard_a ? writedata : alusrca),
+		.alusrcb (load_use_hazard_b ? writedata : alusrcb),
 		.dataD (dataD),
 		.dataE (dataE_nxt)
 	);
@@ -197,7 +232,6 @@ u1 flushF, flushD, flushE, flushM, flushW;
 		.wd     (dataM.writedata)
 	);
 
-	// lab1 don't read/write memory
 	memory memory(
 		.dataE  (dataE),
 		.memout (memout),
@@ -207,7 +241,7 @@ u1 flushF, flushD, flushE, flushM, flushW;
 	forwarding forwarding (
 		.ex_fwd  	(fwd_data_t'({dataE.dst, dataE.aluout, dataE.ctl.reg_write && !dataE.ctl.mem_to_reg})),
 		.mem_fwd  	(fwd_data_t'({dataM.dst, dataM.writedata, dataM.ctl.reg_write})),
-		.decode 	(decode_t'({dataD.rs1, dataD.rs2, dataD.srca, dataD.srcb, dataD.imm, dataD.ctl.is_imm})),
+		.decode 	(decode_t'({dataD.rs1, dataD.rs2, dataD.srca, dataD.srcb})),
 		.alusrca 	(alusrca),
 		.alusrcb 	(alusrcb)
 	);
@@ -218,7 +252,7 @@ u1 flushF, flushD, flushE, flushM, flushW;
 		.clock              (clk),
 		.coreid             (0),
 		.index              (0),
-		.valid              (!stallM),
+		.valid              (!stallM & !load_use_hazard),
 		.pc                 (dataM.instr.pc),
 		.instr              (dataM.instr.raw_instr),
 		.skip               (0),

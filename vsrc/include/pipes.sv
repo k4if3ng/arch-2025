@@ -141,8 +141,6 @@ typedef struct packed {
 typedef struct packed {
 	creg_addr_t rs1, rs2;
 	word_t srca, srcb;
-	word_t imm;
-	u1 is_imm;
 } decode_t;
 
 typedef enum logic [1:0] {

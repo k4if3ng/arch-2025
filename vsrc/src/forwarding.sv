@@ -24,10 +24,8 @@ module forwarding
         end else begin
             alusrca = decode.srca;
         end
-
-        if (decode.is_imm) begin
-            alusrcb = decode.imm;
-        end else if (ex_fwd.valid && ex_fwd.dst == decode.rs2 && decode.rs2 != 0) begin
+    
+        if (ex_fwd.valid && ex_fwd.dst == decode.rs2 && decode.rs2 != 0) begin
             alusrcb = ex_fwd.data;
         end else if (mem_fwd.valid && mem_fwd.dst == decode.rs2 && decode.rs2 != 0) begin
             alusrcb = mem_fwd.data;
