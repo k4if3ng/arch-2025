@@ -34,7 +34,7 @@ module alu
                 aluout = srca ^ srcb;
             end
             default: begin
-                aluout = '0;
+                aluout = srcb;
             end
         endcase
     end

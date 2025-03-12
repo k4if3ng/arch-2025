@@ -29,11 +29,13 @@ module core
 	input  logic       trint, swint, exint
 );
 	
-	u1 stallpc;
-	assign stallpc = ireq.valid && ~iresp.data_ok;
-	
-	u1 stallF, stallD, stallE, stallM, stallW;
-	u1 flushF, flushD, flushE, flushM, flushW;
+u1 stallpc;
+assign stallpc = (ireq.valid & ~iresp.data_ok) | bubble;
+
+u1 stall_inst, stall_data;
+
+u1 stallF, stallD, stallE, stallM, stallW;
+u1 flushF, flushD, flushE, flushM, flushW;
 
 	// in lab1, this works
 	assign stallF = stallpc;
@@ -47,12 +49,59 @@ module core
 
 	u64 pc, pc_nxt;
 
-	assign ireq.valid = 1'b1;
 	assign ireq.addr  = pc;
-	assign dreq.valid = 1'b0;
+	assign ireq.valid = 1'b1;
 
 	u32 raw_instr;
 	assign raw_instr = iresp.data;
+
+	word_t memout;
+	assign dreq.addr  = dataE.aluout;
+	assign dreq.size = dataE.ctl.op inside {SD, LD} ? MSIZE8 : 
+					   dataE.ctl.op inside {SW, LW, LWU} ? MSIZE4 :
+					   dataE.ctl.op inside {SH, LH, LHU} ? MSIZE2 : MSIZE1;
+	assign dreq.strobe = dataE.ctl.mem_write ? 1 << dataE.aluout[1:0] : 0;
+	assign dreq.data  = dataE.rd;
+
+	u1 mem_access;
+	assign mem_access = dataE.ctl.mem_write | dataE.ctl.mem_read;
+	u1 bubble;
+	assign dreq.valid = bubble;
+
+	mem_access_state_t mem_access_state;
+
+	always_ff @(posedge clk ) begin
+		if (reset) begin
+			mem_access_state <= IDLE;
+			bubble <= 0;
+			memout <= 0;
+		end else begin
+			case (mem_access_state)
+				IDLE: begin
+					bubble <= 0;
+					if (mem_access) begin
+						mem_access_state <= WAITING;
+						bubble <= 1;
+					end
+				end
+				WAITING: begin
+					if (dresp.data_ok) begin
+						bubble <= 0;
+						mem_access_state <= OVER;
+						memout <= dresp.data;
+					end
+				end
+				OVER: begin
+					if (!mem_access) begin
+						mem_access_state <= IDLE;
+					end
+				end
+				default: 
+					mem_access_state <= IDLE;
+			endcase
+		end
+		
+	end
 
 	fetch_data_t 	dataF, dataF_nxt;
 	decode_data_t 	dataD, dataD_nxt;
@@ -151,7 +200,7 @@ module core
 	// lab1 don't read/write memory
 	memory memory(
 		.dataE  (dataE),
-		.memout (0),
+		.memout (memout),
 		.dataM  (dataM_nxt)
 	);
 

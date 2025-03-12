@@ -9,13 +9,16 @@ package pipes;
 	import common::*;
 
 /* Define instrucion decoding rules here */
-
 parameter OPCODE_RTYPE = 7'b0110011;    // R-type 指令的 opcode
 parameter OPCODE_ITYPE = 7'b0010011;    // I-type 指令的 opcode
 parameter OPCODE_LOAD = 7'b0000011;     // Load 指令的 opcode
 parameter OPCODE_STORE = 7'b0100011;    // Store 指令的 opcode
 parameter OPCODE_ITYPEW = 7'b0011011;    // 扩展的 I-type 指令的 opcode
 parameter OPCODE_RTYPEW = 7'b0111011;    // 扩展的 R-type 指令的 opcode
+parameter OPCODE_LUI = 7'b0110111;      // LUI 指令的 opcode
+parameter OPCODE_AUIPC = 7'b0010111;    // AUIPC 指令的 opcode
+// parameter OPCODE_RV32M = 7'b0110011;    // RV32M 指令的 opcode
+// parameter OPCODE_RV64M = 7'b0111011;    // RV64M 指令的 opcode
 
 parameter FUNC3_ADD = 3'b000;           // funct3: ADD
 parameter FUNC3_XOR = 3'b100;           // funct3: XOR
@@ -25,15 +28,53 @@ parameter FUNC3_ADDI = 3'b000;          // funct3: ADDI
 parameter FUNC3_XORI = 3'b100;          // funct3: XORI
 parameter FUNC3_ORI  = 3'b110;          // funct3: ORI
 parameter FUNC3_ANDI = 3'b111;          // funct3: ANDI
+parameter FUNC3_ADDW = 3'b000;          // funct3: ADDW
+parameter FUNC3_SUBW = 3'b000;          // funct3: SUBW
+parameter FUNC3_ADDIW = 3'b000;          // funct3: ADDIW
+
 parameter FUNC7_SUB = 7'b0100000;       // funct7: SUB
 parameter FUNC7_ADD = 7'b0000000;       // funct7: ADD
+parameter FUNC7_ADDW = 7'b0000000;      // funct7: ADDW
+parameter FUNC7_SUBW = 7'b0100000;      // funct7: SUBW
+parameter FUNC7_XOR = 7'b0000000;       // funct7: XOR
+parameter FUNC7_OR = 7'b0000000;        // funct7: OR
+parameter FUNC7_AND = 7'b0000000;       // funct7: AND
+parameter FUNC7_RVM = 7'b0000001;       // funct7: MUL, MULW...
+
+parameter FUNC3_LD = 3'b011;            // funct3: LD
+parameter FUNC3_LB = 3'b000;            // funct3: LB
+parameter FUNC3_LH = 3'b001;            // funct3: LH
+parameter FUNC3_LW = 3'b010;            // funct3: LW
+parameter FUNC3_LBU = 3'b100;           // funct3: LBU
+parameter FUNC3_LHU = 3'b101;           // funct3: LHU
+parameter FUNC3_LWU = 3'b110;           // funct3: LWU
+parameter FUNC3_SD = 3'b011;            // funct3: SD
+parameter FUNC3_SB = 3'b000;            // funct3: SB
+parameter FUNC3_SH = 3'b001;            // funct3: SH
+parameter FUNC3_SW = 3'b010;            // funct3: SW
+
+parameter FUNC3_LUI = 3'b011;           // funct3: LUI
+
+parameter FUNC3_MUL = 3'b000;           // funct3: MUL
+parameter FUNC3_DIV = 3'b100;           // funct3: DIV
+parameter FUNC3_DIVU = 3'b101;          // funct3: DIVU
+parameter FUNC3_REM = 3'b110;           // funct3: REM
+parameter FUNC3_REMU = 3'b111;          // funct3: REMU
+parameter FUNC3_MULW = 3'b000;          // funct3: MULW
+parameter FUNC3_DIVW = 3'b100;          // funct3: DIVW
+parameter FUNC3_DIVUW = 3'b101;         // funct3: DIVUW
+parameter FUNC3_REMW = 3'b110;          // funct3: REMW
+parameter FUNC3_REMUW = 3'b111;         // funct3: REMUW
+
 
 /* Define pipeline structures here */
-
+// mul div divu rem remu mulw divw divuw remw remuw
 typedef enum logic [5:0] {
-	NOP,
+	UNKNOWN,
 	ADD, SUB, XOR, OR, AND, ADDI, XORI, ORI, ANDI,
-	ADDW, SUBW, ADDIW
+	ADDW, SUBW, ADDIW,
+	MUL, DIV, DIVU, REM, REMU, MULW, DIVW, DIVUW, REMW, REMUW,
+	LD, SD, LB, LH, LW, LBU, LHU, LWU, SB, SH, SW, LUI, ALUPC
 } instr_op_t;
 
 typedef enum logic [4:0] {
@@ -41,9 +82,16 @@ typedef enum logic [4:0] {
 	ALU_ADD, ALU_SUB, ALU_XOR, ALU_OR, ALU_AND
 } alu_op_t;
 
+typedef enum logic [3:0] {
+    MDU_NOP,
+    MDU_MUL, MDU_DIV, MDU_DIVU, MDU_REM, MDU_REMU,
+	MDU_MULW, MDU_DIVW, MDU_DIVUW, MDU_REMW, MDU_REMUW 
+} mdu_op_t;
+
 typedef struct packed {
 	instr_op_t op;
 	alu_op_t aluop;
+	mdu_op_t mduop;
 	u1 reg_write;
 	u1 is_imm;
 	u1 mem_read, mem_write;
@@ -71,6 +119,7 @@ typedef struct packed {
 
 typedef struct packed {
 	control_t ctl;
+	word_t rd;
 	word_t aluout;
 	creg_addr_t dst;
 	instr_data_t instr;
@@ -95,6 +144,10 @@ typedef struct packed {
 	word_t imm;
 	u1 is_imm;
 } decode_t;
+
+typedef enum logic [1:0] {
+	IDLE, WAITING, OVER
+} mem_access_state_t;
 
 endpackage
 `endif

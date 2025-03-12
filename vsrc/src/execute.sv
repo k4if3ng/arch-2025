@@ -29,6 +29,7 @@ module execute
         dataE.ctl = dataD.ctl;
         dataE.dst = dataD.dst;
         dataE.instr = dataD.instr;
+        dataE.rd = dataD.srca;
         if (dataD.ctl.op inside {ADDW, SUBW, ADDIW}) begin
             dataE.aluout = {{32{aluout[31]}}, aluout[31:0]};
         end else begin
