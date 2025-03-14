@@ -213,6 +213,9 @@ module decoder
                 ctl.aluop = ALU_ADD;
                 ctl.is_imm = 1;
                 case (f3)
+                    FUNC3_LD: begin
+                        ctl.op = LD;
+                    end
                     FUNC3_LB: begin
                         ctl.op = LB;
                     end
@@ -244,6 +247,9 @@ module decoder
                 ctl.aluop = ALU_ADD;
                 ctl.is_imm = 1;
                 case (f3)
+                    FUNC3_SD: begin
+                        ctl.op = SD;
+                    end
                     FUNC3_SB: begin
                         ctl.op = SB;
                     end

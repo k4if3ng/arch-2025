@@ -41,8 +41,10 @@ u1 load_use_hazard;
 // assign load_use_hazard = dataE.ctl.mem_to_reg && 
 //                          ((dataE.dst == dataD.rs1) || (dataE.dst == dataD.rs2));
 
-u1 load_use_hazard_a = dataE.ctl.mem_to_reg && (dataE.dst == dataD.rs1);
-u1 load_use_hazard_b = dataE.ctl.mem_to_reg && (dataE.dst == dataD.rs2);
+u1 load_use_hazard_a = dataE.ctl.mem_to_reg && (dataE.dst == dataD.rs1 && dataD.rs1 != 0);
+u1 load_use_hazard_b = dataE.ctl.mem_to_reg && (dataE.dst == dataD.rs2 && dataD.rs2 != 0);
+
+
 assign stallF = load_use_hazard | stallpc;
 
 	// in lab1, this works
@@ -68,8 +70,9 @@ assign stallF = load_use_hazard | stallpc;
 	assign dreq.size = dataE.ctl.op inside {SD, LD} ? MSIZE8 : 
 					   dataE.ctl.op inside {SW, LW, LWU} ? MSIZE4 :
 					   dataE.ctl.op inside {SH, LH, LHU} ? MSIZE2 : MSIZE1;
-	assign dreq.strobe = dataE.ctl.mem_write ? 1 << dataE.aluout[1:0] : 0;
-	assign dreq.data  = dataE.rd;
+	assign dreq.strobe = dataE.ctl.mem_write ? dataE.ctl.op inside {SD, LD} ? 8'hff : 
+											   dataE.ctl.op inside {SW, LW, LWU} ? 8'hf << (dataE.aluout[2:0]) :
+											   dataE.ctl.op inside {SH, LH, LHU} ? 8'h3 << (dataE.aluout[2:0]) : 8'h1 << (dataE.aluout[2:0]) : 0;	assign dreq.data  = dataE.rd << dataE.aluout[2:0] * 8;
 
 	u1 mem_access;
 	assign mem_access = dataE.ctl.mem_write | dataE.ctl.mem_read;
@@ -81,25 +84,56 @@ assign stallF = load_use_hazard | stallpc;
 	word_t writedata;
 
 	always_comb begin
-		if (dataE.ctl.op == LW) begin
-			writedata = {{32{memout[31]}}, memout[31:0]};
-		end else if (dataE.ctl.op == LWU) begin
-			writedata = {32'b0, memout[31:0]};
-		end else if (dataE.ctl.op == LH) begin
-			writedata = {{48{memout[31]}}, memout[15:0]};
-		end else if (dataE.ctl.op == LHU) begin
-			writedata = {48'b0, memout[15:0]};
-		end else if (dataE.ctl.op == LH) begin
-			writedata = {{48{memout[31]}}, memout[15:0]};
-		end else if (dataE.ctl.op == LHU) begin
-			writedata = {48'b0, memout[15:0]};
-		end else if (dataE.ctl.op == LB) begin
-			writedata = {{56{memout[31]}}, memout[7:0]};
-		end else if (dataE.ctl.op == LBU) begin
-			writedata = {56'b0, memout[7:0]};
-		end else begin
-			writedata = memout;
-		end
+		case (dataE.ctl.op)
+			LD:  writedata = memout; // 64-bit load, 直接返回
+			LW:  case (dataE.aluout[2:0] & 3'b100) // 计算 32-bit 偏移量
+					3'b000: writedata = {{32{memout[31]}}, memout[31:0]}; 
+					3'b100: writedata = {{32{memout[63]}}, memout[63:32]};
+					default: writedata = 64'b0;
+				endcase
+			LWU: case (dataE.aluout[2:0] & 3'b100)
+					3'b000: writedata = {32'b0, memout[31:0]};
+					3'b100: writedata = {32'b0, memout[63:32]};
+					default: writedata = 64'b0;
+				endcase
+			LH:  case (dataE.aluout[2:1]) // 计算 16-bit 偏移量
+					2'b00:  writedata = {{48{memout[15]}}, memout[15:0]};
+					2'b01:  writedata = {{48{memout[31]}}, memout[31:16]};
+					2'b10:  writedata = {{48{memout[47]}}, memout[47:32]};
+					2'b11:  writedata = {{48{memout[63]}}, memout[63:48]};
+					default: writedata = 64'b0;
+				endcase
+			LHU: case (dataE.aluout[2:1])
+					2'b00:  writedata = {48'b0, memout[15:0]};
+					2'b01:  writedata = {48'b0, memout[31:16]};
+					2'b10:  writedata = {48'b0, memout[47:32]};
+					2'b11:  writedata = {48'b0, memout[63:48]};
+					default: writedata = 64'b0;
+				endcase
+			LB:  case (dataE.aluout[2:0]) // 计算 8-bit 偏移量
+					3'b000: writedata = {{56{memout[7]}}, memout[7:0]};
+					3'b001: writedata = {{56{memout[15]}}, memout[15:8]};
+					3'b010: writedata = {{56{memout[23]}}, memout[23:16]};
+					3'b011: writedata = {{56{memout[31]}}, memout[31:24]};
+					3'b100: writedata = {{56{memout[39]}}, memout[39:32]};
+					3'b101: writedata = {{56{memout[47]}}, memout[47:40]};
+					3'b110: writedata = {{56{memout[55]}}, memout[55:48]};
+					3'b111: writedata = {{56{memout[63]}}, memout[63:56]};
+					default: writedata = 64'b0;
+				endcase
+			LBU: case (dataE.aluout[2:0])
+					3'b000: writedata = {56'b0, memout[7:0]};
+					3'b001: writedata = {56'b0, memout[15:8]};
+					3'b010: writedata = {56'b0, memout[23:16]};
+					3'b011: writedata = {56'b0, memout[31:24]};
+					3'b100: writedata = {56'b0, memout[39:32]};
+					3'b101: writedata = {56'b0, memout[47:40]};
+					3'b110: writedata = {56'b0, memout[55:48]};
+					3'b111: writedata = {56'b0, memout[63:56]};
+					default: writedata = 64'b0;
+				endcase
+			default: writedata = 64'b0;
+		endcase
 	end
 
 	always_ff @(posedge clk ) begin
@@ -234,7 +268,7 @@ assign stallF = load_use_hazard | stallpc;
 
 	memory memory(
 		.dataE  (dataE),
-		.memout (memout),
+		.memout (writedata),
 		.dataM  (dataM_nxt)
 	);
 
