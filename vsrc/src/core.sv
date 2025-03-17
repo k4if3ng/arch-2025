@@ -72,7 +72,10 @@ assign stallF = load_use_hazard | stallpc;
 					   dataE.ctl.op inside {SH, LH, LHU} ? MSIZE2 : MSIZE1;
 	assign dreq.strobe = dataE.ctl.mem_write ? dataE.ctl.op inside {SD, LD} ? 8'hff : 
 											   dataE.ctl.op inside {SW, LW, LWU} ? 8'hf << (dataE.aluout[2:0]) :
-											   dataE.ctl.op inside {SH, LH, LHU} ? 8'h3 << (dataE.aluout[2:0]) : 8'h1 << (dataE.aluout[2:0]) : 0;	assign dreq.data  = dataE.rd << dataE.aluout[2:0] * 8;
+											   dataE.ctl.op inside {SH, LH, LHU} ? 8'h3 << (dataE.aluout[2:0]) : 8'h1 << (dataE.aluout[2:0]) : 0;
+											   	
+	assign dreq.data  = dataE.rd << dataE.aluout[2:0] * 8;
+	// assign dreq.data  = 0;
 
 	u1 mem_access;
 	assign mem_access = dataE.ctl.mem_write | dataE.ctl.mem_read;
@@ -161,7 +164,7 @@ assign stallF = load_use_hazard | stallpc;
 				end
 				OVER: begin
 					load_use_hazard <= 0;
-					if (!mem_access) begin
+					if (!stallM) begin
 						mem_access_state <= IDLE;
 					end
 				end
@@ -286,7 +289,7 @@ assign stallF = load_use_hazard | stallpc;
 		.clock              (clk),
 		.coreid             (0),
 		.index              (0),
-		.valid              (!stallM & !load_use_hazard),
+		.valid              (!stallM),
 		.pc                 (dataM.instr.pc),
 		.instr              (dataM.instr.raw_instr),
 		.skip               (0),
