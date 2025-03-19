@@ -18,26 +18,36 @@ module memory
     output mem_data_t   dataM
 );
 
+    u6 offset_bit;
+    u3 offset_byte;
+    u1 mem_access;
+    word_t memout;
+	mem_access_state_t mem_access_state;
+
+    assign offset_byte = dataE.aluout[2:0];
+    assign offset_bit = {dataE.aluout[2:0], 3'b0};
+    assign mem_access = dataE.ctl.mem_write | dataE.ctl.mem_read;
+ 
     assign dreq.addr  = dataE.aluout;
-    assign dreq.size = dataE.ctl.op inside {SD, LD} ? MSIZE8 : 
-                    dataE.ctl.op inside {SW, LW, LWU} ? MSIZE4 :
-                    dataE.ctl.op inside {SH, LH, LHU} ? MSIZE2 : MSIZE1;
-    assign dreq.strobe = dataE.ctl.mem_write ? dataE.ctl.op inside {SD, LD} ? 8'hff : 
-                                            dataE.ctl.op inside {SW, LW, LWU} ? 8'hf << (dataE.aluout[2:0]) :
-                                            dataE.ctl.op inside {SH, LH, LHU} ? 8'h3 << (dataE.aluout[2:0]) : 8'h1 << (dataE.aluout[2:0]) : 0;
+
+    assign dreq.size = dataE.ctl.op inside {SD, LD}      ? MSIZE8 : 
+                       dataE.ctl.op inside {SW, LW, LWU} ? MSIZE4 :
+                       dataE.ctl.op inside {SH, LH, LHU} ? MSIZE2 : MSIZE1;
+
+    assign dreq.strobe = dataE.ctl.op inside {SD}      ? 8'hff : 
+                         dataE.ctl.op inside {SW} ? 8'hf << offset_byte :
+                         dataE.ctl.op inside {SH} ? 8'h3 << offset_byte : 
+                         dataE.ctl.op inside {SB} ? 8'h1 << offset_byte : 0;
                                                 
-    assign dreq.data  = dataE.rd << {{dataE.aluout[2:0], 3'b0}};
+    assign dreq.data  = dataE.rd << offset_bit;
 	assign dreq.valid = load_use_hazard;
 
-    word_t memout;
-    u6 offset;
+    assign load_use_hazard = mem_access_state == WAITING;
 
     always_comb begin
         dataM.ctl = dataE.ctl;
         dataM.dst = dataE.dst;
         dataM.instr = dataE.instr;
-        
-        offset = {dataE.aluout[2:0], 3'b0};
 
         case(dataE.ctl.op)
             LD: begin
@@ -67,11 +77,6 @@ module memory
         endcase
     end
 
-	u1 mem_access;
-	assign mem_access = dataE.ctl.mem_write | dataE.ctl.mem_read;
-    assign load_use_hazard = mem_access_state == WAITING;
-	mem_access_state_t mem_access_state;
-
 	always_ff @(posedge clk ) begin
 		if (reset) begin
 			mem_access_state <= IDLE;
@@ -86,11 +91,11 @@ module memory
 				WAITING: begin
 					if (dresp.data_ok) begin
 						mem_access_state <= OVER;
-						memout <= dresp.data >> offset;
+						memout <= dresp.data >> offset_bit;
 					end
 				end
 				OVER: begin
-					if (flush) begin
+					if (flush || !mem_access) begin
 						mem_access_state <= IDLE;
 					end
 				end
