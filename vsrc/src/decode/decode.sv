@@ -4,7 +4,7 @@
 `ifdef VERILATOR
 `include "include/common.sv"
 `include "include/pipes.sv"
-`include "src/decoder.sv"
+`include "src/decode/decoder.sv"
 `else
 
 `endif
