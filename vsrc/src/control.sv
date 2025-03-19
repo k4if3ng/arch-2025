@@ -9,7 +9,22 @@
 module control
     import common::*;
     import pipes::*;(
+    input  u1           invalid,
+    input  u1           load_use_hazard,
+    output u1           stallpc, stallF, stallD, stallE, stallM,
+    output u1           flushpc, flushF, flushD, flushE, flushM
 );
+    
+    assign stallpc = invalid | load_use_hazard;
+    assign stallF = stallpc;
+    assign stallD = stallF;
+    assign stallE = stallD;
+    assign stallM = stallE;
+    assign flushpc = 0;
+    assign flushF = 0;
+    assign flushD = 0;
+    assign flushE = 0;
+    assign flushM = 0;
 
 
 endmodule

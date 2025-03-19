@@ -16,6 +16,7 @@
 `include "src/pcupdate.sv"
 `include "src/regfile.sv"
 `include "src/forwarding.sv"
+`include "src/control.sv"
 `endif
 
 module core
@@ -29,82 +30,12 @@ module core
 	input  logic       trint, swint, exint
 );
 	
-	u1 stallpc;
-	assign stallpc = (ireq.valid & ~iresp.data_ok) | bubble;
-
-	u1 stallF, stallD, stallE, stallM, stallW;
-	u1 flushF, flushD, flushE, flushM, flushW;
-
-	u1 load_use_hazard_a = dataE.ctl.mem_to_reg && (dataE.dst == dataD.rs1 && dataD.rs1 != 0);
-	u1 load_use_hazard_b = dataE.ctl.mem_to_reg && (dataE.dst == dataD.rs2 && dataD.rs2 != 0);
-
-	assign stallF = stallpc;
-	assign stallD = stallF;
-	assign stallE = stallD;
-	assign stallM = stallE;
-	assign flushF = 0;
-	assign flushD = 0;
-	assign flushE = 0;
-	assign flushM = 0;
+	u1 stallpc, stallF, stallD, stallE, stallM;
+	u1 flushpc, flushF, flushD, flushE, flushM;
 
 	u64 pc, pc_nxt;
 
-	assign ireq.addr  = pc;
-	assign ireq.valid = 1'b1;
-
-	u32 raw_instr;
-	assign raw_instr = iresp.data;
-
-	word_t memout;
-	assign dreq.addr  = dataE.aluout;
-	assign dreq.size = dataE.ctl.op inside {SD, LD} ? MSIZE8 : 
-					   dataE.ctl.op inside {SW, LW, LWU} ? MSIZE4 :
-					   dataE.ctl.op inside {SH, LH, LHU} ? MSIZE2 : MSIZE1;
-	assign dreq.strobe = dataE.ctl.mem_write ? dataE.ctl.op inside {SD, LD} ? 8'hff : 
-											   dataE.ctl.op inside {SW, LW, LWU} ? 8'hf << (dataE.aluout[2:0]) :
-											   dataE.ctl.op inside {SH, LH, LHU} ? 8'h3 << (dataE.aluout[2:0]) : 8'h1 << (dataE.aluout[2:0]) : 0;
-											   	
-	assign dreq.data  = dataE.rd << dataE.aluout[2:0] * 8;
-
-	u1 mem_access;
-	assign mem_access = dataE.ctl.mem_write | dataE.ctl.mem_read;
-	u1 bubble;
-	assign dreq.valid = bubble;
-
-	mem_access_state_t mem_access_state;
-
-	always_ff @(posedge clk ) begin
-		if (reset) begin
-			mem_access_state <= IDLE;
-			bubble <= 0;
-			memout <= 0;
-		end else begin
-			case (mem_access_state)
-				IDLE: begin
-					bubble <= 0;
-					if (mem_access) begin
-						mem_access_state <= WAITING;
-						bubble <= 1;
-					end
-				end
-				WAITING: begin
-					if (dresp.data_ok) begin
-						bubble <= 0;
-						mem_access_state <= OVER;
-						memout <= dresp.data;
-					end
-				end
-				OVER: begin
-					if (!stallM) begin
-						mem_access_state <= IDLE;
-					end
-				end
-				default: 
-					mem_access_state <= IDLE;
-			endcase
-		end
-		
-	end
+	u1 load_use_hazard;
 
 	fetch_data_t 	dataF, dataF_nxt;
 	decode_data_t 	dataD, dataD_nxt;
@@ -163,7 +94,8 @@ module core
 
 	fetch fetch(
 		.pc			(pc),
-		.raw_instr 	(raw_instr),
+		.iresp 		(iresp),
+		.ireq 		(ireq),
 		.dataF     	(dataF_nxt)
 	);
 
@@ -182,10 +114,21 @@ module core
 	);
 
 	execute execute(
-		.alusrca (load_use_hazard_a ? dataM_nxt.writedata : alusrca),
-		.alusrcb (load_use_hazard_b ? dataM_nxt.writedata : alusrcb),
-		.dataD (dataD),
-		.dataE (dataE_nxt)
+		.alusrca (alusrca),
+		.alusrcb (alusrcb),
+		.dataD 	 (dataD),
+		.dataE   (dataE_nxt)
+	);
+
+	memory memory(
+		.clk    (clk),
+		.reset  (reset),
+		.flush  (!stallM),
+		.dataE  (dataE),
+		.dresp  (dresp),
+		.dreq   (dreq),
+		.load_use_hazard (load_use_hazard),
+		.dataM  (dataM_nxt)
 	);
 
 	regfile regfile(
@@ -200,15 +143,25 @@ module core
 		.wd     (dataM.writedata)
 	);
 
-	memory memory(
-		.dataE  (dataE),
-		.memout (memout),
-		.dataM  (dataM_nxt)
+	control control(
+		.invalid(ireq.valid & ~iresp.data_ok),
+		.load_use_hazard(load_use_hazard),
+		.stallpc(stallpc),
+		.stallF(stallF),
+		.stallD(stallD),
+		.stallE(stallE),
+		.stallM(stallM),
+		.flushpc(flushpc),
+		.flushF(flushF),
+		.flushD(flushD),
+		.flushE(flushE),
+		.flushM(flushM)
 	);
 
 	forwarding forwarding (
 		.ex_fwd  	(fwd_data_t'({dataE.dst, dataE.aluout, dataE.ctl.reg_write && !dataE.ctl.mem_to_reg})),
 		.mem_fwd  	(fwd_data_t'({dataM.dst, dataM.writedata, dataM.ctl.reg_write})),
+		.load_fwd 	(fwd_data_t'({dataM_nxt.dst, dataM_nxt.writedata, dataM_nxt.ctl.reg_write})),
 		.decode 	(decode_t'({dataD.rs1, dataD.rs2, dataD.srca, dataD.srcb})),
 		.alusrca 	(alusrca),
 		.alusrcb 	(alusrcb)
@@ -220,7 +173,7 @@ module core
 		.clock              (clk),
 		.coreid             (0),
 		.index              (0),
-		.valid              (!stallM),
+		.valid              (!stallpc),
 		.pc                 (dataM.instr.pc),
 		.instr              (dataM.instr.raw_instr),
 		.skip               (0),
