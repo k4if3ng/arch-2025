@@ -11,13 +11,16 @@ module forwarding
     import pipes::*; (
     input  fwd_data_t   ex_fwd,
     input  fwd_data_t   mem_fwd,
+    input  fwd_data_t   load_fwd,
     input  decode_t     decode,
     output word_t       alusrca,
     output word_t       alusrcb
 );
 
     always_comb begin
-        if (ex_fwd.valid && ex_fwd.dst == decode.rs1 && decode.rs1 != 0) begin
+        if (load_fwd.valid && load_fwd.dst == decode.rs1 && decode.rs1 != 0) begin
+            alusrca = load_fwd.data;
+        end else if (ex_fwd.valid && ex_fwd.dst == decode.rs1 && decode.rs1 != 0) begin
             alusrca = ex_fwd.data;
         end else if (mem_fwd.valid && mem_fwd.dst == decode.rs1 && decode.rs1 != 0) begin
             alusrca = mem_fwd.data;
@@ -25,7 +28,9 @@ module forwarding
             alusrca = decode.srca;
         end
     
-        if (ex_fwd.valid && ex_fwd.dst == decode.rs2 && decode.rs2 != 0) begin
+        if (load_fwd.valid && load_fwd.dst == decode.rs2 && decode.rs2 != 0) begin
+            alusrcb = load_fwd.data;
+        end else if (ex_fwd.valid && ex_fwd.dst == decode.rs2 && decode.rs2 != 0) begin
             alusrcb = ex_fwd.data;
         end else if (mem_fwd.valid && mem_fwd.dst == decode.rs2 && decode.rs2 != 0) begin
             alusrcb = mem_fwd.data;

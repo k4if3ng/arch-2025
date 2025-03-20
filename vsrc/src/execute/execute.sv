@@ -4,7 +4,7 @@
 `ifdef VERILATOR
 `include "include/common.sv"
 `include "include/pipes.sv"
-`include "src/alu.sv"
+`include "src//execute/alu.sv"
 `endif
 
 module execute
