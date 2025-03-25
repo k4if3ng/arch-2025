@@ -14,6 +14,9 @@ module alu
     output word_t      aluout
 );
 
+    shamt_t shamt;
+    assign shamt = srcb[4: 0];
+
     always_comb begin
         aluout = '0;
 
@@ -33,8 +36,26 @@ module alu
             ALU_XOR: begin
                 aluout = srca ^ srcb;
             end
-            default: begin
+            ALU_SLL: begin
+                aluout = srca << srcb;
+            end
+            ALU_SRL: begin
+                aluout = srca >> srcb;
+            end
+            ALU_SRA: begin
+                aluout = signed'(srca) >>> srcb;
+            end
+            ALU_SLT: begin
+                aluout = (signed'(srca) < signed'(srcb)) ? 64'b1 : 64'b0;
+            end
+            ALU_SLTU: begin
+                aluout = (srca < srcb) ? 64'b1 : 64'b0;
+            end
+            ALU_LUI: begin
                 aluout = srcb;
+            end
+            default: begin
+                aluout = '0;
             end
         endcase
     end

@@ -28,18 +28,33 @@ parameter FUNC3_ADDI = 3'b000;          // funct3: ADDI
 parameter FUNC3_XORI = 3'b100;          // funct3: XORI
 parameter FUNC3_ORI  = 3'b110;          // funct3: ORI
 parameter FUNC3_ANDI = 3'b111;          // funct3: ANDI
-parameter FUNC3_ADDW = 3'b000;          // funct3: ADDW
-parameter FUNC3_SUBW = 3'b000;          // funct3: SUBW
-parameter FUNC3_ADDIW = 3'b000;          // funct3: ADDIW
+parameter FUNC3_SLL = 3'b001;           // funct3: SLL
+parameter FUNC3_SRL = 3'b101;           // funct3: SRL
+parameter FUNC3_SRA = 3'b101;           // funct3: SRA
+parameter FUNC3_SLT = 3'b010;           // funct3: SLT
+parameter FUNC3_SLTU = 3'b011;          // funct3: SLTU
+parameter FUNC3_SLLI = 3'b001;          // funct3: SLLI
+parameter FUNC3_SRLI = 3'b101;          // funct3: SRLI
+parameter FUNC3_SRAI = 3'b101;          // funct3: SRAI
+parameter FUNC3_SLTI = 3'b010;          // funct3: SLTI
+parameter FUNC3_SLTIU = 3'b011;         // funct3: SLTIU
+parameter FUNC3_SLLW = 3'b001;          // funct3: SLLW
+parameter FUNC3_SRLW = 3'b101;          // funct3: SRLW
+parameter FUNC3_SRAW = 3'b101;          // funct3: SRAW
+parameter FUNC3_SLLIW = 3'b001;         // funct3: SLLIW
+parameter FUNC3_SRLIW = 3'b101;         // funct3: SRLIW
+parameter FUNC3_SRAIW = 3'b101;         // funct3: SRAIW
 
 parameter FUNC7_SUB = 7'b0100000;       // funct7: SUB
 parameter FUNC7_ADD = 7'b0000000;       // funct7: ADD
-parameter FUNC7_ADDW = 7'b0000000;      // funct7: ADDW
-parameter FUNC7_SUBW = 7'b0100000;      // funct7: SUBW
 parameter FUNC7_XOR = 7'b0000000;       // funct7: XOR
 parameter FUNC7_OR = 7'b0000000;        // funct7: OR
 parameter FUNC7_AND = 7'b0000000;       // funct7: AND
 parameter FUNC7_RVM = 7'b0000001;       // funct7: MUL, MULW...
+parameter FUNC7_SRL = 7'b0000000;       // funct7: SRL
+parameter FUNC7_SRA = 7'b0100000;       // funct7: SRA
+parameter FUNC7_SRLI = 7'b0000000;      // funct7: SRLI
+parameter FUNC7_SRAI = 7'b0100000;      // funct7: SRAI
 
 parameter FUNC3_LD = 3'b011;            // funct3: LD
 parameter FUNC3_LB = 3'b000;            // funct3: LB
@@ -72,14 +87,18 @@ parameter FUNC3_REMUW = 3'b111;         // funct3: REMUW
 typedef enum logic [5:0] {
 	UNKNOWN,
 	ADD, SUB, XOR, OR, AND, ADDI, XORI, ORI, ANDI,
+	SLL, SRL, SRA, SLT, SLTU, SLLI, SRLI, SRAI, SLTI, SLTIU,
 	ADDW, SUBW, ADDIW,
+	SLLW, SRLW, SRAW, SLLIW, SRLIW, SRAIW,
 	MUL, DIV, DIVU, REM, REMU, MULW, DIVW, DIVUW, REMW, REMUW,
-	LD, SD, LB, LH, LW, LBU, LHU, LWU, SB, SH, SW, LUI, ALUPC
+	LD, SD, LB, LH, LW, LBU, LHU, LWU, SB, SH, SW, LUI, AUIPC
 } instr_op_t;
 
 typedef enum logic [4:0] {
 	ALU_NOP, 
-	ALU_ADD, ALU_SUB, ALU_XOR, ALU_OR, ALU_AND
+	ALU_ADD, ALU_SUB, ALU_XOR, ALU_OR, ALU_AND, ALU_LUI,
+	ALU_SLL, ALU_SRL, ALU_SRA,
+	ALU_SLT, ALU_SLTU
 } alu_op_t;
 
 typedef enum logic [3:0] {

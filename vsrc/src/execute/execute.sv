@@ -19,7 +19,7 @@ module execute
     word_t aluout;
 
     alu alu(
-        .srca(alusrca),
+        .srca(dataD.ctl.op == AUIPC ? dataD.instr.pc : alusrca),
         .srcb(dataD.ctl.is_imm ? dataD.imm : alusrcb),
         .aluop(dataD.ctl.aluop),
         .aluout(aluout)
@@ -30,7 +30,7 @@ module execute
         dataE.dst = dataD.dst;
         dataE.instr = dataD.instr;
         dataE.rd = alusrcb;
-        if (dataD.ctl.op inside {ADDW, SUBW, ADDIW}) begin
+        if (dataD.ctl.op inside {ADDW, SUBW, ADDIW, SLLW, SRLW, SRAW, SLLIW, SRLIW, SRAIW}) begin
             dataE.aluout = {{32{aluout[31]}}, aluout[31:0]};
         end else begin
             dataE.aluout = aluout;
