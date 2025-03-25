@@ -10,6 +10,7 @@ module control
     import common::*;
     import pipes::*;(
     input  u1           invalid,
+    input  u1           jump,
     input  u1           load_use_hazard,
     output u1           stallpc, stallF, stallD, stallE, stallM,
     output u1           flushpc, flushF, flushD, flushE, flushM
@@ -20,9 +21,9 @@ module control
     assign stallD = stallF;
     assign stallE = stallD;
     assign stallM = stallE;
-    assign flushpc = 0;
+    assign flushpc = jump;
     assign flushF = 0;
-    assign flushD = 0;
+    assign flushD = jump;
     assign flushE = 0;
     assign flushM = 0;
 

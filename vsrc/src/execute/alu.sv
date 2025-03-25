@@ -15,7 +15,7 @@ module alu
 );
 
     shamt_t shamt;
-    assign shamt = srcb[4: 0];
+    assign shamt = srcb[5: 0];
 
     always_comb begin
         aluout = '0;
@@ -36,14 +36,23 @@ module alu
             ALU_XOR: begin
                 aluout = srca ^ srcb;
             end
+            ALU_SLLW: begin
+                aluout = {32'b0, {srca[31:0] << shamt[4:0]}};
+            end
+            ALU_SRLW: begin
+                aluout = {32'b0, {srca[31:0] >> shamt[4:0]}};
+            end
+            ALU_SRAW: begin
+                aluout = signed'({{32{srca[31]}}, srca[31:0]}) >>> shamt[4:0];
+            end
             ALU_SLL: begin
-                aluout = srca << srcb;
+                aluout = srca << shamt;
             end
             ALU_SRL: begin
-                aluout = srca >> srcb;
+                aluout = srca >> shamt;
             end
             ALU_SRA: begin
-                aluout = signed'(srca) >>> srcb;
+                aluout = signed'(srca) >>> shamt;
             end
             ALU_SLT: begin
                 aluout = (signed'(srca) < signed'(srcb)) ? 64'b1 : 64'b0;

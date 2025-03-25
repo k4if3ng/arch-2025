@@ -168,14 +168,14 @@ module decoder
                         ctl.op = SLLI;
                     end
                     FUNC3_SRLI: begin
-                        case (f7)
-                            FUNC7_SRLI: begin
+                        case (f7[6:1])
+                            FUNC6_SRLI: begin
                                 ctl.aluop = ALU_SRL;
                                 ctl.reg_write = 1;
                                 ctl.is_imm = 1;
                                 ctl.op = SRLI;
                             end
-                            FUNC7_SRAI: begin
+                            FUNC6_SRAI: begin
                                 ctl.aluop = ALU_SRA;
                                 ctl.reg_write = 1;
                                 ctl.is_imm = 1;
@@ -185,6 +185,18 @@ module decoder
                                 ctl = 0;
                             end
                         endcase
+                    end
+                    FUNC3_SLTI: begin
+                        ctl.op = SLTI;
+                        ctl.is_imm = 1;
+                        ctl.reg_write = 1;
+                        ctl.aluop = ALU_SLT;
+                    end
+                    FUNC3_SLTIU: begin
+                        ctl.op = SLTIU;
+                        ctl.is_imm = 1;
+                        ctl.reg_write = 1;
+                        ctl.aluop = ALU_SLTU;
                     end
                     default: begin
                         ctl = 0;
@@ -217,19 +229,19 @@ module decoder
                         endcase
                     end
                     FUNC3_SLL: begin
-                        ctl.aluop = ALU_SLL;
+                        ctl.aluop = ALU_SLLW;
                         ctl.reg_write = 1;
                         ctl.op = SLLW;
                     end
                     FUNC3_SRL: begin
                         case (f7)
                             FUNC7_SRL: begin
-                                ctl.aluop = ALU_SRL;
+                                ctl.aluop = ALU_SRLW;
                                 ctl.reg_write = 1;
                                 ctl.op = SRLW;
                             end
                             FUNC7_SRA: begin
-                                ctl.aluop = ALU_SRA;
+                                ctl.aluop = ALU_SRAW;
                                 ctl.reg_write = 1;
                                 ctl.op = SRAW;
                             end
@@ -255,21 +267,21 @@ module decoder
                     
                     end
                     FUNC3_SLLI: begin
-                        ctl.aluop = ALU_SLL;
+                        ctl.aluop = ALU_SLLW;
                         ctl.reg_write = 1;
                         ctl.is_imm = 1;
                         ctl.op = SLLIW;
                     end
                     FUNC3_SRLI: begin
-                        case (f7)
-                            FUNC7_SRLI: begin
-                                ctl.aluop = ALU_SRL;
+                        case (f7[6:1])
+                            FUNC6_SRLI: begin
+                                ctl.aluop = ALU_SRLW;
                                 ctl.reg_write = 1;
                                 ctl.is_imm = 1;
                                 ctl.op = SRLIW;
                             end
-                            FUNC7_SRAI: begin
-                                ctl.aluop = ALU_SRA;
+                            FUNC6_SRAI: begin
+                                ctl.aluop = ALU_SRAW;
                                 ctl.reg_write = 1;
                                 ctl.is_imm = 1;
                                 ctl.op = SRAIW;
@@ -320,6 +332,40 @@ module decoder
                 endcase
             end
             
+            OPCODE_BTYPE: begin
+                imm = {{52{raw_instr[31]}}, raw_instr[7], raw_instr[30:25], raw_instr[11:8], 1'b0};  // B-type 指令的立即数
+                ctl.aluop = ALU_ADD;
+                ctl.is_imm = 1;
+                case (f3)
+                    FUNC3_BEQ: begin
+                        ctl.op = BEQ;
+                        ctl.aluop = ALU_ADD;
+                    end
+                    FUNC3_BNE: begin
+                        ctl.op = BNE;
+                        ctl.aluop = ALU_ADD;
+                    end
+                    FUNC3_BLT: begin
+                        ctl.op = BLT;
+                        ctl.aluop = ALU_ADD;
+                    end
+                    FUNC3_BGE: begin
+                        ctl.op = BGE;
+                        ctl.aluop = ALU_ADD;
+                    end
+                    FUNC3_BLTU: begin
+                        ctl.op = BLTU;
+                        ctl.aluop = ALU_ADD;
+                    end
+                    FUNC3_BGEU: begin
+                        ctl.op = BGEU;
+                        ctl.aluop = ALU_ADD;
+                    end
+                    default: begin
+                        ctl = '0;
+                    end
+                endcase
+            end
 
             OPCODE_STORE: begin
                 imm = {{52{raw_instr[31]}}, raw_instr[31:25], raw_instr[11:7]};  // S-type 指令的立即数
@@ -360,6 +406,24 @@ module decoder
                 ctl.reg_write = 1;
                 ctl.is_imm = 1;
                 ctl.op = AUIPC;
+            end
+
+            OPCODE_JAL: begin
+                imm = {{44{raw_instr[31]}}, raw_instr[19:12], raw_instr[20], raw_instr[30:21], 1'b0};  // J-type 指令的立即数
+                ctl.aluop = ALU_ADD;
+                ctl.reg_write = 1;
+                ctl.is_imm = 1;
+                ctl.jump = 1;
+                ctl.op = JAL;
+            end
+
+            OPCODE_JALR: begin
+                imm = {{52{raw_instr[31]}}, raw_instr[31:20]};  // I-type 指令的立即数
+                ctl.aluop = ALU_ADD;
+                ctl.reg_write = 1;
+                ctl.is_imm = 1;
+                ctl.jump = 1;
+                ctl.op = JALR;
             end
 
             default: begin

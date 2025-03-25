@@ -17,6 +17,9 @@ parameter OPCODE_ITYPEW = 7'b0011011;    // 扩展的 I-type 指令的 opcode
 parameter OPCODE_RTYPEW = 7'b0111011;    // 扩展的 R-type 指令的 opcode
 parameter OPCODE_LUI = 7'b0110111;      // LUI 指令的 opcode
 parameter OPCODE_AUIPC = 7'b0010111;    // AUIPC 指令的 opcode
+parameter OPCODE_BTYPE = 7'b1100011;   // Branch 指令的 opcode
+parameter OPCODE_JALR = 7'b1100111;     // JALR 指令的 opcode
+parameter OPCODE_JAL = 7'b1101111;      // JAL 指令的 opcode
 // parameter OPCODE_RV32M = 7'b0110011;    // RV32M 指令的 opcode
 // parameter OPCODE_RV64M = 7'b0111011;    // RV64M 指令的 opcode
 
@@ -44,6 +47,12 @@ parameter FUNC3_SRAW = 3'b101;          // funct3: SRAW
 parameter FUNC3_SLLIW = 3'b001;         // funct3: SLLIW
 parameter FUNC3_SRLIW = 3'b101;         // funct3: SRLIW
 parameter FUNC3_SRAIW = 3'b101;         // funct3: SRAIW
+parameter FUNC3_BEQ = 3'b000;           // funct3: BEQ
+parameter FUNC3_BNE = 3'b001;           // funct3: BNE
+parameter FUNC3_BLT = 3'b100;           // funct3: BLT
+parameter FUNC3_BGE = 3'b101;           // funct3: BGE
+parameter FUNC3_BLTU = 3'b110;          // funct3: BLTU
+parameter FUNC3_BGEU = 3'b111;          // funct3: BGEU
 
 parameter FUNC7_SUB = 7'b0100000;       // funct7: SUB
 parameter FUNC7_ADD = 7'b0000000;       // funct7: ADD
@@ -53,8 +62,9 @@ parameter FUNC7_AND = 7'b0000000;       // funct7: AND
 parameter FUNC7_RVM = 7'b0000001;       // funct7: MUL, MULW...
 parameter FUNC7_SRL = 7'b0000000;       // funct7: SRL
 parameter FUNC7_SRA = 7'b0100000;       // funct7: SRA
-parameter FUNC7_SRLI = 7'b0000000;      // funct7: SRLI
-parameter FUNC7_SRAI = 7'b0100000;      // funct7: SRAI
+
+parameter FUNC6_SRLI = 6'b000000;      // funct6: SRLI
+parameter FUNC6_SRAI = 6'b010000;      // funct6: SRAI
 
 parameter FUNC3_LD = 3'b011;            // funct3: LD
 parameter FUNC3_LB = 3'b000;            // funct3: LB
@@ -91,13 +101,16 @@ typedef enum logic [5:0] {
 	ADDW, SUBW, ADDIW,
 	SLLW, SRLW, SRAW, SLLIW, SRLIW, SRAIW,
 	MUL, DIV, DIVU, REM, REMU, MULW, DIVW, DIVUW, REMW, REMUW,
-	LD, SD, LB, LH, LW, LBU, LHU, LWU, SB, SH, SW, LUI, AUIPC
+	LD, SD, LB, LH, LW, LBU, LHU, LWU, SB, SH, SW, LUI, AUIPC,
+	BEQ, BNE, BLT, BGE, BLTU, BGEU,
+	JALR, JAL
 } instr_op_t;
 
 typedef enum logic [4:0] {
 	ALU_NOP, 
 	ALU_ADD, ALU_SUB, ALU_XOR, ALU_OR, ALU_AND, ALU_LUI,
 	ALU_SLL, ALU_SRL, ALU_SRA,
+	ALU_SLLW, ALU_SRLW, ALU_SRAW,
 	ALU_SLT, ALU_SLTU
 } alu_op_t;
 
@@ -115,6 +128,8 @@ typedef struct packed {
 	u1 is_imm;
 	u1 mem_read, mem_write;
 	u1 mem_to_reg;
+	u1 branch;
+	u1 jump;
 } control_t;
 
 typedef struct packed {
@@ -142,6 +157,7 @@ typedef struct packed {
 	word_t aluout;
 	creg_addr_t dst;
 	instr_data_t instr;
+	word_t pcjump;
 } exec_data_t;
 
 typedef struct packed {

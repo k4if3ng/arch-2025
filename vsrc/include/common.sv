@@ -42,7 +42,7 @@ package common;
 	typedef u12 csr_addr_t;
 
     // shamt_t is used to represent the shift amount in RV64I
-    typedef u5 shamt_t;
+    typedef u6 shamt_t;
 
 /**
  * this file contains basic definitions and typedefs for general designs.

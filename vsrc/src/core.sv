@@ -101,6 +101,8 @@ module core
 
 	pcselect pcselect(
 		.pcplus4 	(pc + 4),
+		.pcjump     (dataE_nxt.pcjump),
+		.jump 		(dataE_nxt.ctl.jump | dataE_nxt.ctl.branch),
 		.pc_selected(pc_nxt)
 	);
 
@@ -145,6 +147,7 @@ module core
 
 	control control(
 		.invalid(ireq.valid & ~iresp.data_ok),
+		.jump(dataE.ctl.jump | dataE.ctl.branch),
 		.load_use_hazard(load_use_hazard),
 		.stallpc(stallpc),
 		.stallF(stallF),
@@ -173,7 +176,7 @@ module core
 		.clock              (clk),
 		.coreid             (0),
 		.index              (0),
-		.valid              (!stallpc),
+		.valid              (!stallpc && dataM != 0),
 		.pc                 (dataM.instr.pc),
 		.instr              (dataM.instr.raw_instr),
 		.skip               (0),
