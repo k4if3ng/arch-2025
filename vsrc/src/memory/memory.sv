@@ -20,21 +20,20 @@ module memory
 
     u6 offset_bit;
     u3 offset_byte;
-    u1 mem_access;
     word_t memout;
 	mem_access_state_t mem_access_state;
 
     assign offset_byte = dataE.aluout[2:0];
     assign offset_bit = {dataE.aluout[2:0], 3'b0};
-    assign mem_access = dataE.ctl.mem_write | dataE.ctl.mem_read;
  
     assign dreq.addr  = dataE.aluout;
+    assign dataM.mem_addr = dataE.aluout;
 
     assign dreq.size = dataE.ctl.op inside {SD, LD}      ? MSIZE8 : 
                        dataE.ctl.op inside {SW, LW, LWU} ? MSIZE4 :
                        dataE.ctl.op inside {SH, LH, LHU} ? MSIZE2 : MSIZE1;
 
-    assign dreq.strobe = dataE.ctl.op inside {SD}      ? 8'hff : 
+    assign dreq.strobe = dataE.ctl.op inside {SD} ? 8'hff : 
                          dataE.ctl.op inside {SW} ? 8'hf << offset_byte :
                          dataE.ctl.op inside {SH} ? 8'h3 << offset_byte : 
                          dataE.ctl.op inside {SB} ? 8'h1 << offset_byte : 0;
@@ -84,7 +83,7 @@ module memory
 		end else begin
 			case (mem_access_state)
 				IDLE: begin
-					if (mem_access) begin
+					if (dataE.ctl.mem_access) begin
 						mem_access_state <= WAITING;
 					end
 				end
@@ -95,7 +94,7 @@ module memory
 					end
 				end
 				OVER: begin
-					if (flush || !mem_access) begin
+					if (flush || !dataE.ctl.mem_access) begin
 						mem_access_state <= IDLE;
 					end
 				end

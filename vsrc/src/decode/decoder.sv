@@ -258,18 +258,16 @@ module decoder
 
             OPCODE_ITYPEW: begin
                 imm = {{52{raw_instr[31]}}, raw_instr[31:20]};  // I-type 指令的立即数
+                ctl.is_imm = 1;
                 case (f3)
                     FUNC3_ADDI: begin
                         ctl.aluop = ALU_ADD;
                         ctl.reg_write = 1;
-                        ctl.is_imm = 1;
                         ctl.op = ADDIW;
-                    
                     end
                     FUNC3_SLLI: begin
                         ctl.aluop = ALU_SLLW;
                         ctl.reg_write = 1;
-                        ctl.is_imm = 1;
                         ctl.op = SLLIW;
                     end
                     FUNC3_SRLI: begin
@@ -277,13 +275,11 @@ module decoder
                             FUNC6_SRLI: begin
                                 ctl.aluop = ALU_SRLW;
                                 ctl.reg_write = 1;
-                                ctl.is_imm = 1;
                                 ctl.op = SRLIW;
                             end
                             FUNC6_SRAI: begin
                                 ctl.aluop = ALU_SRAW;
                                 ctl.reg_write = 1;
-                                ctl.is_imm = 1;
                                 ctl.op = SRAIW;
                             end
                             default: begin
@@ -299,7 +295,7 @@ module decoder
 
             OPCODE_LOAD: begin
                 imm = {{52{raw_instr[31]}}, raw_instr[31:20]};  // I-type 指令的立即数
-                ctl.mem_read = 1;
+                ctl.mem_access = 1;
                 ctl.mem_to_reg = 1;
                 ctl.reg_write = 1;
                 ctl.aluop = ALU_ADD;
@@ -339,27 +335,21 @@ module decoder
                 case (f3)
                     FUNC3_BEQ: begin
                         ctl.op = BEQ;
-                        ctl.aluop = ALU_ADD;
                     end
                     FUNC3_BNE: begin
                         ctl.op = BNE;
-                        ctl.aluop = ALU_ADD;
                     end
                     FUNC3_BLT: begin
                         ctl.op = BLT;
-                        ctl.aluop = ALU_ADD;
                     end
                     FUNC3_BGE: begin
                         ctl.op = BGE;
-                        ctl.aluop = ALU_ADD;
                     end
                     FUNC3_BLTU: begin
                         ctl.op = BLTU;
-                        ctl.aluop = ALU_ADD;
                     end
                     FUNC3_BGEU: begin
                         ctl.op = BGEU;
-                        ctl.aluop = ALU_ADD;
                     end
                     default: begin
                         ctl = '0;
@@ -369,7 +359,7 @@ module decoder
 
             OPCODE_STORE: begin
                 imm = {{52{raw_instr[31]}}, raw_instr[31:25], raw_instr[11:7]};  // S-type 指令的立即数
-                ctl.mem_write = 1;
+                ctl.mem_access = 1;
                 ctl.aluop = ALU_ADD;
                 ctl.is_imm = 1;
                 case (f3)

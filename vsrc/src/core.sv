@@ -179,7 +179,7 @@ module core
 		.valid              (!stallpc && dataM != 0),
 		.pc                 (dataM.instr.pc),
 		.instr              (dataM.instr.raw_instr),
-		.skip               (0),
+		.skip               (dataM.ctl.mem_access & dataM.mem_addr[31] == 0),
 		.isRVC              (0),
 		.scFailed           (0),
 		.wen                (dataM.ctl.reg_write),

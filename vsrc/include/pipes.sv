@@ -126,7 +126,7 @@ typedef struct packed {
 	mdu_op_t mduop;
 	u1 reg_write;
 	u1 is_imm;
-	u1 mem_read, mem_write;
+	u1 mem_access;
 	u1 mem_to_reg;
 	u1 branch;
 	u1 jump;
@@ -165,6 +165,7 @@ typedef struct packed {
 	word_t writedata;
 	creg_addr_t dst;
 	instr_data_t instr;
+	word_t mem_addr;
 } mem_data_t;
 
 typedef struct packed {
