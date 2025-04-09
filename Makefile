@@ -20,7 +20,6 @@ handin:
 	read lab_n; \
 	zip -q -r "docs/$$filename-lab$$lab_n.zip" \
 	  include vsrc docs/report.pdf
-	  include vsrc docs/report.pdf
 
 sim-verilog:
 	@echo "I don't know why, just make difftest happy..."
