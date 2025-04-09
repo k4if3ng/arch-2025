@@ -9,8 +9,8 @@ def bin_to_coe(bin_path, coe_path):
     for i in range(0, len(content), 8):  
         instr1 = content[i:i+4]
         instr2 = content[i+4:i+8] if i + 4 < len(content) else b'\x00\x00\x00\x00'
-        hex1 = ''.join(f'{b:02x}' for b in instr1[::-1])
-        hex2 = ''.join(f'{b:02x}' for b in instr2[::-1])
+        hex1 = ''.join(f'{b:02x}' for b in instr2[::-1])
+        hex2 = ''.join(f'{b:02x}' for b in instr1[::-1])
         lines.append(hex1 + hex2)
 
     with open(coe_path, "w") as f:
@@ -22,4 +22,4 @@ def bin_to_coe(bin_path, coe_path):
             else:
                 f.write(line + "\n")
 
-bin_to_coe("lab3-extra-test.bin", "lab3-extra-test.coe")
+bin_to_coe("lab3-test.bin", "lab3-test.coe")
