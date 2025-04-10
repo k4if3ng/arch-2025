@@ -21,7 +21,7 @@ module control
     assign stallD = stallF;
     assign stallE = stallD;
     assign stallM = stallE;
-    assign flushpc = jump;
+    assign flushpc = 0;
     assign flushF = 0;
     assign flushD = jump;
     assign flushE = 0;
