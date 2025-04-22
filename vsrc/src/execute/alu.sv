@@ -63,6 +63,9 @@ module alu
             ALU_LUI: begin
                 aluout = srcb;
             end
+            ALU_PASS_A: begin
+                aluout = srca;
+            end
             default: begin
                 aluout = '0;
             end

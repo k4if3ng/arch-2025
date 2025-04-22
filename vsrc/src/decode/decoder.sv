@@ -22,22 +22,20 @@ module decoder
         ctl = '0;
         case (opcode)
             OPCODE_RTYPE: begin
+                ctl.reg_write = 1;
                 case (f3)
                     FUNC3_ADD: begin
                         case (f7)
                             FUNC7_ADD: begin
                                 ctl.aluop = ALU_ADD;
-                                ctl.reg_write = 1;
                                 ctl.op = ADD;
                             end
                             FUNC7_SUB: begin
                                 ctl.aluop = ALU_SUB;
-                                ctl.reg_write = 1;
                                 ctl.op = SUB;
                             end
                             FUNC7_RVM: begin
                                 ctl.mduop = MDU_MUL;
-                                ctl.reg_write = 1;
                                 ctl.op = MUL;
                             end
                             default: begin
@@ -49,12 +47,10 @@ module decoder
                         case (f7)
                             FUNC7_XOR: begin
                                 ctl.aluop = ALU_XOR;
-                                ctl.reg_write = 1;
                                 ctl.op = XOR;
                             end
                             FUNC7_RVM: begin
                                 ctl.mduop = MDU_DIV;
-                                ctl.reg_write = 1;
                                 ctl.op = DIV;
                             end 
                             default: begin
@@ -66,12 +62,10 @@ module decoder
                         case (f7)
                             FUNC7_OR: begin
                                 ctl.aluop = ALU_OR;
-                                ctl.reg_write = 1;
                                 ctl.op = OR;
                             end
                             FUNC7_RVM: begin
                                 ctl.mduop = MDU_REM;
-                                ctl.reg_write = 1;
                                 ctl.op = REM;
                             end
                             default: begin
@@ -83,12 +77,10 @@ module decoder
                         case (f7)
                             FUNC7_AND: begin
                                 ctl.aluop = ALU_AND;
-                                ctl.reg_write = 1;
                                 ctl.op = AND;
                             end
                             FUNC7_RVM: begin
                                 ctl.mduop = MDU_REMU;
-                                ctl.reg_write = 1;
                                 ctl.op = REMU;
                             end
                             default: begin
@@ -98,19 +90,16 @@ module decoder
                     end
                     FUNC3_SLL: begin
                         ctl.aluop = ALU_SLL;
-                        ctl.reg_write = 1;
                         ctl.op = SLL;
                     end
                     FUNC3_SRL: begin
                         case (f7)
                             FUNC7_SRL: begin
                                 ctl.aluop = ALU_SRL;
-                                ctl.reg_write = 1;
                                 ctl.op = SRL;
                             end
                             FUNC7_SRA: begin
                                 ctl.aluop = ALU_SRA;
-                                ctl.reg_write = 1;
                                 ctl.op = SRA;
                             end
                             default: begin
@@ -120,12 +109,10 @@ module decoder
                     end
                     FUNC3_SLT: begin
                         ctl.op = SLT;
-                        ctl.reg_write = 1;
                         ctl.aluop = ALU_SLT;
                     end
                     FUNC3_SLTU: begin
                         ctl.op = SLTU;
-                        ctl.reg_write = 1;
                         ctl.aluop = ALU_SLTU;
                     end
                     default: begin
@@ -136,49 +123,37 @@ module decoder
 
             OPCODE_ITYPE: begin
                 imm = {{52{raw_instr[31]}}, raw_instr[31:20]};  // I-type 指令的立即数
+                ctl.reg_write = 1;
+                ctl.is_imm = 1;
                 case (f3)
                     FUNC3_ADDI: begin
                         ctl.aluop = ALU_ADD;
-                        ctl.reg_write = 1;
-                        ctl.is_imm = 1;
                         ctl.op = ADDI;
                     end
                     FUNC3_XORI: begin
                         ctl.aluop = ALU_XOR;
-                        ctl.reg_write = 1;
-                        ctl.is_imm = 1;
                         ctl.op = XORI;
                     end
                     FUNC3_ORI: begin
                         ctl.aluop = ALU_OR;
-                        ctl.reg_write = 1;
-                        ctl.is_imm = 1;
                         ctl.op = ORI;
                     end
                     FUNC3_ANDI: begin
                         ctl.aluop = ALU_AND;
-                        ctl.reg_write = 1;
-                        ctl.is_imm = 1;
                         ctl.op = ANDI;
                     end
                     FUNC3_SLLI: begin
                         ctl.aluop = ALU_SLL;
-                        ctl.reg_write = 1;
-                        ctl.is_imm = 1;
                         ctl.op = SLLI;
                     end
                     FUNC3_SRLI: begin
                         case (f7[6:1])
                             FUNC6_SRLI: begin
                                 ctl.aluop = ALU_SRL;
-                                ctl.reg_write = 1;
-                                ctl.is_imm = 1;
                                 ctl.op = SRLI;
                             end
                             FUNC6_SRAI: begin
                                 ctl.aluop = ALU_SRA;
-                                ctl.reg_write = 1;
-                                ctl.is_imm = 1;
                                 ctl.op = SRAI;
                             end
                             default: begin
@@ -188,14 +163,10 @@ module decoder
                     end
                     FUNC3_SLTI: begin
                         ctl.op = SLTI;
-                        ctl.is_imm = 1;
-                        ctl.reg_write = 1;
                         ctl.aluop = ALU_SLT;
                     end
                     FUNC3_SLTIU: begin
                         ctl.op = SLTIU;
-                        ctl.is_imm = 1;
-                        ctl.reg_write = 1;
                         ctl.aluop = ALU_SLTU;
                     end
                     default: begin
@@ -205,22 +176,20 @@ module decoder
             end
 
             OPCODE_RTYPEW: begin
+                ctl.reg_write = 1;
                 case (f3)
                     FUNC3_ADD: begin
                         case (f7) 
                             FUNC7_ADD: begin
                                 ctl.aluop = ALU_ADD;
-                                ctl.reg_write = 1;
                                 ctl.op = ADDW;
                             end
                             FUNC7_SUB: begin
                                 ctl.aluop = ALU_SUB;
-                                ctl.reg_write = 1;
                                 ctl.op = SUBW;
                             end
                             FUNC7_RVM: begin
                                 ctl.mduop = MDU_MULW;
-                                ctl.reg_write = 1;
                                 ctl.op = MULW;
                             end
                             default: begin
@@ -230,19 +199,16 @@ module decoder
                     end
                     FUNC3_SLL: begin
                         ctl.aluop = ALU_SLLW;
-                        ctl.reg_write = 1;
                         ctl.op = SLLW;
                     end
                     FUNC3_SRL: begin
                         case (f7)
                             FUNC7_SRL: begin
                                 ctl.aluop = ALU_SRLW;
-                                ctl.reg_write = 1;
                                 ctl.op = SRLW;
                             end
                             FUNC7_SRA: begin
                                 ctl.aluop = ALU_SRAW;
-                                ctl.reg_write = 1;
                                 ctl.op = SRAW;
                             end
                             default: begin
@@ -259,27 +225,24 @@ module decoder
             OPCODE_ITYPEW: begin
                 imm = {{52{raw_instr[31]}}, raw_instr[31:20]};  // I-type 指令的立即数
                 ctl.is_imm = 1;
+                ctl.reg_write = 1;
                 case (f3)
                     FUNC3_ADDI: begin
                         ctl.aluop = ALU_ADD;
-                        ctl.reg_write = 1;
                         ctl.op = ADDIW;
                     end
                     FUNC3_SLLI: begin
                         ctl.aluop = ALU_SLLW;
-                        ctl.reg_write = 1;
                         ctl.op = SLLIW;
                     end
                     FUNC3_SRLI: begin
                         case (f7[6:1])
                             FUNC6_SRLI: begin
                                 ctl.aluop = ALU_SRLW;
-                                ctl.reg_write = 1;
                                 ctl.op = SRLIW;
                             end
                             FUNC6_SRAI: begin
                                 ctl.aluop = ALU_SRAW;
-                                ctl.reg_write = 1;
                                 ctl.op = SRAIW;
                             end
                             default: begin
@@ -414,6 +377,39 @@ module decoder
                 ctl.is_imm = 1;
                 ctl.jump = 1;
                 ctl.op = JALR;
+            end
+
+            OPCODE_SYSTEM: begin
+                imm = {{59{1'b0}}, raw_instr[19:15]};
+                ctl.reg_write = 1;
+                ctl.csr = 1;
+                ctl.aluop = ALU_PASS_A;
+                case (f3)
+                    FUNC3_CSRRW: begin
+                        ctl.op = CSRRW;
+                    end
+                    FUNC3_CSRRS: begin
+                        ctl.op = CSRRS;
+                    end
+                    FUNC3_CSRRC: begin
+                        ctl.op = CSRRC;
+                    end
+                    FUNC3_CSRRWI: begin
+                        ctl.op = CSRRWI;
+                        ctl.is_imm = 1;
+                    end
+                    FUNC3_CSRRSI: begin
+                        ctl.op = CSRRSI;
+                        ctl.is_imm = 1;
+                    end
+                    FUNC3_CSRRCI: begin
+                        ctl.op = CSRRCI;
+                        ctl.is_imm = 1;
+                    end
+                    default: begin
+                        ctl = 0;
+                    end
+                endcase
             end
 
             default: begin

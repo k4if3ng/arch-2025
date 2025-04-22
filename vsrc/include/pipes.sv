@@ -22,6 +22,7 @@ parameter OPCODE_JALR = 7'b1100111;     // JALR 指令的 opcode
 parameter OPCODE_JAL = 7'b1101111;      // JAL 指令的 opcode
 // parameter OPCODE_RV32M = 7'b0110011;    // RV32M 指令的 opcode
 // parameter OPCODE_RV64M = 7'b0111011;    // RV64M 指令的 opcode
+parameter OPCODE_SYSTEM = 7'b1110011;      // CSR 指令的 opcode
 
 parameter FUNC3_ADD = 3'b000;           // funct3: ADD
 parameter FUNC3_XOR = 3'b100;           // funct3: XOR
@@ -91,10 +92,15 @@ parameter FUNC3_DIVUW = 3'b101;         // funct3: DIVUW
 parameter FUNC3_REMW = 3'b110;          // funct3: REMW
 parameter FUNC3_REMUW = 3'b111;         // funct3: REMUW
 
+parameter FUNC3_CSRRW = 3'b001;         // funct3: CSRRW
+parameter FUNC3_CSRRS = 3'b010;         // funct3: CSRRS
+parameter FUNC3_CSRRC = 3'b011;         // funct3: CSRRC
+parameter FUNC3_CSRRWI = 3'b101;        // funct3: CSRRWI
+parameter FUNC3_CSRRSI = 3'b110;       // funct3: CSRRSI
+parameter FUNC3_CSRRCI = 3'b111;       // funct3: CSRRCI
 
-/* Define pipeline structures here */
-// mul div divu rem remu mulw divw divuw remw remuw
-typedef enum logic [5:0] {
+
+typedef enum logic [6:0] {
 	UNKNOWN,
 	ADD, SUB, XOR, OR, AND, ADDI, XORI, ORI, ANDI,
 	SLL, SRL, SRA, SLT, SLTU, SLLI, SRLI, SRAI, SLTI, SLTIU,
@@ -103,11 +109,12 @@ typedef enum logic [5:0] {
 	MUL, DIV, DIVU, REM, REMU, MULW, DIVW, DIVUW, REMW, REMUW,
 	LD, SD, LB, LH, LW, LBU, LHU, LWU, SB, SH, SW, LUI, AUIPC,
 	BEQ, BNE, BLT, BGE, BLTU, BGEU,
-	JALR, JAL
+	JALR, JAL,
+	CSRRW, CSRRS, CSRRC, CSRRWI, CSRRSI, CSRRCI
 } instr_op_t;
 
 typedef enum logic [4:0] {
-	ALU_NOP, 
+	ALU_NOP, ALU_PASS_A,
 	ALU_ADD, ALU_SUB, ALU_XOR, ALU_OR, ALU_AND, ALU_LUI,
 	ALU_SLL, ALU_SRL, ALU_SRA,
 	ALU_SLLW, ALU_SRLW, ALU_SRAW,
@@ -130,6 +137,7 @@ typedef struct packed {
 	u1 mem_to_reg;
 	u1 branch;
 	u1 jump;
+	u1 csr;
 } control_t;
 
 typedef struct packed {
@@ -143,9 +151,11 @@ typedef struct packed {
 } fetch_data_t;
 
 typedef struct packed {
-	word_t srca, srcb;
 	creg_addr_t rs1, rs2;
+	word_t srca, srcb;
 	word_t imm;
+	csr_addr_t csr_addr;
+	word_t csr_data;
 	control_t ctl;
 	creg_addr_t dst;
 	instr_data_t instr;
@@ -155,6 +165,8 @@ typedef struct packed {
 	control_t ctl;
 	word_t rd;
 	word_t aluout;
+	word_t csr_data;
+	csr_addr_t csr_addr;
 	creg_addr_t dst;
 	instr_data_t instr;
 	word_t pcjump;
@@ -163,6 +175,8 @@ typedef struct packed {
 typedef struct packed {
 	control_t ctl;
 	word_t writedata;
+	word_t csr_data;
+	csr_addr_t csr_addr;
 	creg_addr_t dst;
 	instr_data_t instr;
 	word_t mem_addr;

@@ -18,9 +18,14 @@ module execute
 
     word_t aluout;
 
+    word_t srca, srcb;
+
+    assign srca = dataD.ctl.op inside {AUIPC, BEQ, BNE, BLT, BGE, BLTU, BGEU, JAL} ? dataD.instr.pc : alusrca;
+    assign srcb = dataD.ctl.is_imm ? dataD.imm : alusrcb;
+
     alu alu(
-        .srca(dataD.ctl.op inside {AUIPC, BEQ, BNE, BLT, BGE, BLTU, BGEU, JAL} ? dataD.instr.pc : alusrca),
-        .srcb(dataD.ctl.is_imm ? dataD.imm : alusrcb),
+        .srca(srca),
+        .srcb(srcb),
         .aluop(dataD.ctl.aluop),
         .aluout(aluout)
     );
@@ -31,6 +36,7 @@ module execute
         dataE.instr = dataD.instr;
         dataE.rd = alusrcb;
         dataE.pcjump = aluout & ~64'b1;
+        dataE.csr_addr = dataD.csr_addr;
         if (dataD.ctl.op inside {ADDW, SUBW, ADDIW, SLLW, SRLW, SRAW, SLLIW, SRLIW, SRAIW}) begin
             dataE.aluout = {{32{aluout[31]}}, aluout[31:0]};
         end else if (dataD.ctl.op inside {JAL, JALR }) begin
@@ -38,6 +44,35 @@ module execute
         end else begin
             dataE.aluout = aluout;
         end
+        // if (dataD.ctl.csr) begin
+        //     unique case (dataD.ctl.op)
+        //         CSRRW:begin
+        //             dataE.aluout = dataD.csr_data;
+        //             dataE.csr_data = srca;
+        //         end
+        //         CSRRS:begin
+        //             dataE.aluout = dataD.csr_data;
+        //             dataE.csr_data = srca | dataD.csr_data;
+        //         end
+        //         CSRRC:begin
+        //             dataE.aluout = dataD.csr_data;
+        //             dataE.csr_data = srca & ~dataD.csr_data;
+        //         end
+        //         CSRRWI:begin
+        //             dataE.aluout = dataD.csr_data;
+        //             dataE.csr_data = srcb;
+        //         end
+        //         CSRRSI:begin
+        //             dataE.aluout = dataD.csr_data;
+        //             dataE.csr_data = srcb | dataD.csr_data;
+        //         end
+        //         CSRRCI:begin
+        //             dataE.aluout = dataD.csr_data;
+        //             dataE.csr_data = srcb & ~dataD.csr_data;
+        //         end
+        //         default: ;
+        //     endcase
+        // end
         case (dataD.ctl.op)
             BEQ:begin
                 dataE.ctl.branch = alusrca == alusrcb;
@@ -57,8 +92,35 @@ module execute
             BGEU:begin
                 dataE.ctl.branch = alusrca >= alusrcb;
             end
+
+            // csr
+            CSRRW:begin
+                dataE.aluout = dataD.csr_data;
+                dataE.csr_data = srca;
+            end
+            CSRRS:begin
+                dataE.aluout = dataD.csr_data;
+                dataE.csr_data = srca | dataD.csr_data;
+            end
+            CSRRC:begin
+                dataE.aluout = dataD.csr_data;
+                dataE.csr_data = ~srca & dataD.csr_data;
+            end
+            CSRRWI:begin
+                dataE.aluout = dataD.csr_data;
+                dataE.csr_data = srcb;
+            end
+            CSRRSI:begin
+                dataE.aluout = dataD.csr_data;
+                dataE.csr_data = srcb | dataD.csr_data;
+            end
+            CSRRCI:begin
+                dataE.aluout = dataD.csr_data;
+                dataE.csr_data = ~srcb & dataD.csr_data;
+            end
             default:begin
                 dataE.ctl.branch = 0;
+                dataE.csr_data = 0;
             end
         endcase
     end

@@ -4,6 +4,7 @@
 `ifdef VERILATOR
 `include "include/common.sv"
 `include "include/pipes.sv"
+`include "include/csr.sv"
 `include "src/fetch/pcselect.sv"
 `include "src/fetch/pcupdate.sv"
 `include "src/fetch/fetch.sv"
@@ -15,13 +16,15 @@
 `include "src/pipeline/ex_mem_reg.sv"
 `include "src/pipeline/mem_wb_reg.sv"
 `include "src/pipeline/forwarding.sv"
-`include "src/regfile.sv"
+`include "src/reg/regfile.sv"
+`include "src/reg/csrfile.sv"
 `include "src/control.sv"
 `endif
 
 module core
 	import common::*;
-	import pipes::*;(
+	import pipes::*;
+	import csr_pkg::*;(
 	input  logic       clk, reset,
 	output ibus_req_t  ireq,
 	input  ibus_resp_t iresp,
@@ -44,6 +47,9 @@ module core
 
 	creg_addr_t ra1, ra2;
 	word_t rd1, rd2;
+	
+	csr_addr_t csr_addr;
+	word_t csr_data;
 
 	word_t alusrca, alusrcb;
 
@@ -94,6 +100,7 @@ module core
 
 	fetch fetch(
 		.pc			(pc),
+		.flushpc    (flushpc),
 		.iresp 		(iresp),
 		.ireq 		(ireq),
 		.dataF     	(dataF_nxt)
@@ -112,7 +119,9 @@ module core
 		.ra1   (ra1),
 		.ra2   (ra2),
 		.rd1   (rd1),
-		.rd2   (rd2)
+		.rd2   (rd2),
+		.csr_addr(csr_addr),
+		.csr_data(csr_data)
 	);
 
 	execute execute(
@@ -148,6 +157,8 @@ module core
 	control control(
 		.invalid(ireq.valid & ~iresp.data_ok),
 		.jump(dataE.ctl.jump | dataE.ctl.branch),
+		// .csr(dataD.ctl.csr | dataE.ctl.csr  | dataM.ctl.csr),
+		.csr(dataD_nxt.ctl.csr | dataE_nxt.ctl.csr  | dataM_nxt.ctl.csr),
 		.load_use_hazard(load_use_hazard),
 		.stallpc(stallpc),
 		.stallF(stallF),
@@ -170,13 +181,23 @@ module core
 		.alusrcb 	(alusrcb)
 	);
 
+	csrfile csrfile(
+		.clk(clk),
+		.reset(reset),
+		.raddr(csr_addr),
+		.waddr(dataM.csr_addr),
+		.wen(dataM.ctl.csr),
+		.wdata(dataM.csr_data),
+		.ren(dataD_nxt.ctl.csr),
+		.rdata(csr_data)
+	);
 
 `ifdef VERILATOR
 	DifftestInstrCommit DifftestInstrCommit(
 		.clock              (clk),
 		.coreid             (0),
 		.index              (0),
-		.valid              (!stallpc && dataM != 0),
+		.valid              (!stallM && (dataM.instr.pc != dataM_nxt.instr.pc || dataM_nxt == 0) && dataM != 0),
 		.pc                 (dataM.instr.pc),
 		.instr              (dataM.instr.raw_instr),
 		.skip               (dataM.ctl.mem_access & dataM.mem_addr[31] == 0),
@@ -236,22 +257,22 @@ module core
 
 	DifftestCSRState DifftestCSRState(
 		.clock              (clk),
-		.coreid             (0),
+		.coreid             (csrfile.mhartid[7:0]),
 		.priviledgeMode     (3),
-		.mstatus            (0),
-		.sstatus            (0 /* mstatus & SSTATUS_MASK */),
-		.mepc               (0),
+		.mstatus            (csrfile.mstatus),
+		.sstatus            (csrfile.mstatus & SSTATUS_MASK), /* mstatus & SSTATUS_MASK */
+		.mepc               (csrfile.mepc),
 		.sepc               (0),
-		.mtval              (0),
+		.mtval              (csrfile.mtval),
 		.stval              (0),
-		.mtvec              (0),
+		.mtvec              (csrfile.mtvec),
 		.stvec              (0),
-		.mcause             (0),
+		.mcause             (csrfile.mcause),
 		.scause             (0),
-		.satp               (0),
-		.mip                (0),
-		.mie                (0),
-		.mscratch           (0),
+		.satp               (csrfile.satp),
+		.mip                (csrfile.mip),
+		.mie                (csrfile.mie),
+		.mscratch           (csrfile.mscratch),
 		.sscratch           (0),
 		.mideleg            (0),
 		.medeleg            (0)

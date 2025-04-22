@@ -18,7 +18,10 @@ module decode
     output creg_addr_t  ra1, 
     output creg_addr_t  ra2,
     input  word_t       rd1, 
-    input  word_t       rd2
+    input  word_t       rd2,
+
+    output csr_addr_t   csr_addr,
+    input  word_t       csr_data
 );
 
     control_t ctl;
@@ -38,6 +41,9 @@ module decode
     assign dataD.rs2 = dataF.instr.raw_instr[24:20];
     assign dataD.srca = rd1;
     assign dataD.srcb = rd2;
+    assign csr_addr = dataF.instr.raw_instr[31:20];
+    assign dataD.csr_addr = dataF.instr.raw_instr[31:20];
+    assign dataD.csr_data = csr_data;
 
 endmodule
 

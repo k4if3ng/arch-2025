@@ -11,17 +11,18 @@ module control
     import pipes::*;(
     input  u1           invalid,
     input  u1           jump,
+    input  u1           csr,
     input  u1           load_use_hazard,
     output u1           stallpc, stallF, stallD, stallE, stallM,
     output u1           flushpc, flushF, flushD, flushE, flushM
 );
     
-    assign stallpc = invalid | load_use_hazard;
-    assign stallF = stallpc;
-    assign stallD = stallF;
+    assign stallpc = invalid | load_use_hazard | csr;;
+    assign stallF = invalid | load_use_hazard;
+    assign stallD = invalid | load_use_hazard;
     assign stallE = stallD;
     assign stallM = stallE;
-    assign flushpc = 0;
+    assign flushpc = csr;
     assign flushF = 0;
     assign flushD = jump;
     assign flushE = 0;
