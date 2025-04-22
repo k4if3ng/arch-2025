@@ -33,6 +33,9 @@ emu:
 export NOOP_HOME=$(abspath .)
 export NEMU_HOME=$(abspath ./ready-to-run)
 
+backup:
+	cp -r ./vsrc ./vivado ./ready-to-run ./docs ./difftest ./verilate /mnt/d/Study/2025Spring/Architecture/
+
 sim:
 	rm -rf build
 	mkdir -p build

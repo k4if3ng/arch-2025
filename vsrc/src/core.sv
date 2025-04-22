@@ -195,7 +195,7 @@ module core
 `ifdef VERILATOR
 	DifftestInstrCommit DifftestInstrCommit(
 		.clock              (clk),
-		.coreid             (0),
+		.coreid             (csrfile.mhartid[7:0]),
 		.index              (0),
 		.valid              (!stallM && (dataM.instr.pc != dataM_nxt.instr.pc || dataM_nxt == 0) && dataM != 0),
 		.pc                 (dataM.instr.pc),
@@ -210,7 +210,7 @@ module core
 
 	DifftestArchIntRegState DifftestArchIntRegState (
 		.clock              (clk),
-		.coreid             (0),
+		.coreid             (csrfile.mhartid[7:0]),
 		.gpr_0              (regfile.regs_nxt[0]),
 		.gpr_1              (regfile.regs_nxt[1]),
 		.gpr_2              (regfile.regs_nxt[2]),
@@ -247,7 +247,7 @@ module core
 
     DifftestTrapEvent DifftestTrapEvent(
 		.clock              (clk),
-		.coreid             (0),
+		.coreid             (csrfile.mhartid[7:0]),
 		.valid              (0),
 		.code               (0),
 		.pc                 (0),

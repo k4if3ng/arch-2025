@@ -37,6 +37,8 @@ module csrfile
             CSR_MCAUSE:  rdata = mcause;
             CSR_MTVAL:   rdata = mtval;
             CSR_MCYCLE:  rdata = mcycle;
+            CSR_SATP:    rdata = satp;
+            CSR_MHARTID: rdata = mhartid;
             default:     rdata = 0;
         endcase        
     end

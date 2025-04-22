@@ -147,7 +147,6 @@ typedef struct packed {
 
 typedef struct packed {
 	instr_data_t instr;
-	word_t pcplus4;
 } fetch_data_t;
 
 typedef struct packed {

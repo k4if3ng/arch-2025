@@ -20,6 +20,7 @@ module decoder
 
     always_comb begin
         ctl = '0;
+        imm = '0;
         case (opcode)
             OPCODE_RTYPE: begin
                 ctl.reg_write = 1;

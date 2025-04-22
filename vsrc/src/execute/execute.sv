@@ -36,44 +36,19 @@ module execute
         dataE.instr = dataD.instr;
         dataE.rd = alusrcb;
         dataE.pcjump = aluout & ~64'b1;
+        dataE.ctl.branch = 0;
         dataE.csr_addr = dataD.csr_addr;
-        if (dataD.ctl.op inside {ADDW, SUBW, ADDIW, SLLW, SRLW, SRAW, SLLIW, SRLIW, SRAIW}) begin
-            dataE.aluout = {{32{aluout[31]}}, aluout[31:0]};
-        end else if (dataD.ctl.op inside {JAL, JALR }) begin
-            dataE.aluout = dataD.instr.pc + 4;
-        end else begin
-            dataE.aluout = aluout;
-        end
-        // if (dataD.ctl.csr) begin
-        //     unique case (dataD.ctl.op)
-        //         CSRRW:begin
-        //             dataE.aluout = dataD.csr_data;
-        //             dataE.csr_data = srca;
-        //         end
-        //         CSRRS:begin
-        //             dataE.aluout = dataD.csr_data;
-        //             dataE.csr_data = srca | dataD.csr_data;
-        //         end
-        //         CSRRC:begin
-        //             dataE.aluout = dataD.csr_data;
-        //             dataE.csr_data = srca & ~dataD.csr_data;
-        //         end
-        //         CSRRWI:begin
-        //             dataE.aluout = dataD.csr_data;
-        //             dataE.csr_data = srcb;
-        //         end
-        //         CSRRSI:begin
-        //             dataE.aluout = dataD.csr_data;
-        //             dataE.csr_data = srcb | dataD.csr_data;
-        //         end
-        //         CSRRCI:begin
-        //             dataE.aluout = dataD.csr_data;
-        //             dataE.csr_data = srcb & ~dataD.csr_data;
-        //         end
-        //         default: ;
-        //     endcase
-        // end
-        case (dataD.ctl.op)
+        dataE.csr_data = 0;
+        dataE.aluout = aluout;
+        
+
+        unique case (dataD.ctl.op)
+            ADDW, SUBW, ADDIW, SLLW, SRLW, SRAW, SLLIW, SRLIW, SRAIW:begin
+                dataE.aluout = {{32{aluout[31]}}, aluout[31:0]};
+            end
+            JAL, JALR:begin
+                dataE.aluout = dataD.instr.pc + 4;
+            end
             BEQ:begin
                 dataE.ctl.branch = alusrca == alusrcb;
             end
@@ -121,6 +96,7 @@ module execute
             default:begin
                 dataE.ctl.branch = 0;
                 dataE.csr_data = 0;
+                dataE.aluout = aluout;
             end
         endcase
     end
