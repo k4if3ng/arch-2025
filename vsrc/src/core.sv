@@ -15,7 +15,7 @@
 `include "src/pipeline/id_ex_reg.sv"
 `include "src/pipeline/ex_mem_reg.sv"
 `include "src/pipeline/mem_wb_reg.sv"
-`include "src/pipeline/forwarding.sv"
+`include "src/pipeline/forward.sv"
 `include "src/reg/regfile.sv"
 `include "src/reg/csrfile.sv"
 `include "src/control.sv"
@@ -35,11 +35,9 @@ module core
 	
 	u1 stallpc, stallF, stallD, stallE, stallM;
 	u1 flushpc, flushF, flushD, flushE, flushM;
-
-	u64 pc, pc_nxt;
-
 	u1 load_use_hazard;
 
+	u64 pc, pc_nxt;
 	fetch_data_t 	dataF, dataF_nxt;
 	decode_data_t 	dataD, dataD_nxt;
 	exec_data_t 	dataE, dataE_nxt;
@@ -157,7 +155,6 @@ module core
 	control control(
 		.invalid(ireq.valid & ~iresp.data_ok),
 		.jump(dataE.ctl.jump | dataE.ctl.branch),
-		// .csr(dataD.ctl.csr | dataE.ctl.csr  | dataM.ctl.csr),
 		.csr(dataD_nxt.ctl.csr | dataE_nxt.ctl.csr  | dataM_nxt.ctl.csr),
 		.load_use_hazard(load_use_hazard),
 		.stallpc(stallpc),
@@ -172,7 +169,7 @@ module core
 		.flushM(flushM)
 	);
 
-	forwarding forwarding (
+	forward forward (
 		.ex_fwd  	(fwd_data_t'({dataE.dst, dataE.aluout, dataE.ctl.reg_write && !dataE.ctl.mem_to_reg})),
 		.mem_fwd  	(fwd_data_t'({dataM.dst, dataM.writedata, dataM.ctl.reg_write})),
 		.load_fwd 	(fwd_data_t'({dataM_nxt.dst, dataM_nxt.writedata, dataM_nxt.ctl.reg_write})),

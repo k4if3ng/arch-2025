@@ -64,8 +64,8 @@ parameter FUNC7_RVM = 7'b0000001;       // funct7: MUL, MULW...
 parameter FUNC7_SRL = 7'b0000000;       // funct7: SRL
 parameter FUNC7_SRA = 7'b0100000;       // funct7: SRA
 
-parameter FUNC6_SRLI = 6'b000000;      // funct6: SRLI
-parameter FUNC6_SRAI = 6'b010000;      // funct6: SRAI
+parameter FUNC6_SRLI = 6'b000000;       // funct6: SRLI
+parameter FUNC6_SRAI = 6'b010000;       // funct6: SRAI
 
 parameter FUNC3_LD = 3'b011;            // funct3: LD
 parameter FUNC3_LB = 3'b000;            // funct3: LB
@@ -96,8 +96,8 @@ parameter FUNC3_CSRRW = 3'b001;         // funct3: CSRRW
 parameter FUNC3_CSRRS = 3'b010;         // funct3: CSRRS
 parameter FUNC3_CSRRC = 3'b011;         // funct3: CSRRC
 parameter FUNC3_CSRRWI = 3'b101;        // funct3: CSRRWI
-parameter FUNC3_CSRRSI = 3'b110;       // funct3: CSRRSI
-parameter FUNC3_CSRRCI = 3'b111;       // funct3: CSRRCI
+parameter FUNC3_CSRRSI = 3'b110;        // funct3: CSRRSI
+parameter FUNC3_CSRRCI = 3'b111;        // funct3: CSRRCI
 
 
 typedef enum logic [6:0] {

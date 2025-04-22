@@ -20,8 +20,8 @@ module csrfile
     output word_t       rdata       // 读数据
 );
 
-    word_t mstatus;
-    // mstatus_t mstatus;
+    // word_t mstatus;
+    mstatus_t mstatus;
     word_t mtvec, mip, mie, mscratch, mhartid;
     word_t mcause, mtval, mepc, mcycle, satp;
     word_t test = wdata & MSTATUS_MASK;

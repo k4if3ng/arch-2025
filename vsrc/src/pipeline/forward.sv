@@ -6,7 +6,7 @@
 `include "include/pipes.sv"
 `endif
 
-module forwarding
+module forward
     import common::*;
     import pipes::*; (
     input  fwd_data_t   ex_fwd,

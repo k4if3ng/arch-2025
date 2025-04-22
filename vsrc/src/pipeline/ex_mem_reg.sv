@@ -1,5 +1,5 @@
-`ifndef __EMMREG_SV
-`define __EMMREG_SV
+`ifndef __EX_MEM_REG_SV
+`define __EX_MEM_REG_SV
 
 `ifdef VERILATOR
 `include "include/common.sv"
