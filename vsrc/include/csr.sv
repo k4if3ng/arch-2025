@@ -71,6 +71,29 @@ package csr_pkg;
     u16 asid;
     u44 ppn;
   } satp_t;
+
+  typedef enum logic [1:0] { 
+    PRIV_U = 2'b00,
+    PRIV_S = 2'b01,
+    PRIV_H = 2'b10,
+    PRIV_M = 2'b11
+  } priv_t;
+
+  // sv39
+  typedef struct packed {
+    u10 reserved;
+    u44 ppn;
+    u2  rsw;
+    u1  d;
+    u1  a;
+    u1  g;
+    u1  u;
+    u1  x;
+    u1  w;
+    u1  r;
+    u1  v;
+  } pte_t;
+
 endpackage
 
 `endif

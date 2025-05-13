@@ -17,7 +17,7 @@ module control
     output u1           flushpc, flushF, flushD, flushE, flushM
 );
     
-    assign stallpc = invalid | load_use_hazard | csr;;
+    assign stallpc = invalid | load_use_hazard | csr;
     assign stallF = invalid | load_use_hazard;
     assign stallD = invalid | load_use_hazard;
     assign stallE = stallD;

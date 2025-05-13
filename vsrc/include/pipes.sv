@@ -98,6 +98,11 @@ parameter FUNC3_CSRRC = 3'b011;         // funct3: CSRRC
 parameter FUNC3_CSRRWI = 3'b101;        // funct3: CSRRWI
 parameter FUNC3_CSRRSI = 3'b110;        // funct3: CSRRSI
 parameter FUNC3_CSRRCI = 3'b111;        // funct3: CSRRCI
+parameter FUNC3_ECALL = 3'b000;        	// funct3: MRET
+
+parameter FUNC7_MRET = 7'b0011000;        // funct7: MRET
+parameter FUNC12_ECALL = 12'b000000000000;   // funct12: ECALL
+parameter FUNC12_EBREAK = 12'b000000000001; // funct12: EBREAK
 
 
 typedef enum logic [6:0] {
@@ -110,7 +115,8 @@ typedef enum logic [6:0] {
 	LD, SD, LB, LH, LW, LBU, LHU, LWU, SB, SH, SW, LUI, AUIPC,
 	BEQ, BNE, BLT, BGE, BLTU, BGEU,
 	JALR, JAL,
-	CSRRW, CSRRS, CSRRC, CSRRWI, CSRRSI, CSRRCI
+	CSRRW, CSRRS, CSRRC, CSRRWI, CSRRSI, CSRRCI,
+	MRET, ECALL
 } instr_op_t;
 
 typedef enum logic [4:0] {
@@ -135,7 +141,6 @@ typedef struct packed {
 	u1 is_imm;
 	u1 mem_access;
 	u1 mem_to_reg;
-	u1 branch;
 	u1 jump;
 	u1 csr;
 } control_t;
@@ -153,7 +158,7 @@ typedef struct packed {
 	creg_addr_t rs1, rs2;
 	word_t srca, srcb;
 	word_t imm;
-	csr_addr_t csr_addr;
+	csr_addr_t csr_waddr;
 	word_t csr_data;
 	control_t ctl;
 	creg_addr_t dst;
@@ -165,7 +170,7 @@ typedef struct packed {
 	word_t rd;
 	word_t aluout;
 	word_t csr_data;
-	csr_addr_t csr_addr;
+	csr_addr_t csr_waddr;
 	creg_addr_t dst;
 	instr_data_t instr;
 	word_t pcjump;
@@ -175,7 +180,7 @@ typedef struct packed {
 	control_t ctl;
 	word_t writedata;
 	word_t csr_data;
-	csr_addr_t csr_addr;
+	csr_addr_t csr_waddr;
 	creg_addr_t dst;
 	instr_data_t instr;
 	word_t mem_addr;

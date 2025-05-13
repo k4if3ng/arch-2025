@@ -20,11 +20,12 @@ module csrfile
     output word_t       rdata       // 读数据
 );
 
-    // word_t mstatus;
     mstatus_t mstatus;
     word_t mtvec, mip, mie, mscratch, mhartid;
-    word_t mcause, mtval, mepc, mcycle, satp;
-    word_t test = wdata & MSTATUS_MASK;
+    word_t mcause, mtval, mepc, mcycle;
+    satp_t satp;
+
+    priv_t priv;
 
     always_comb begin
         unique case (raddr)
@@ -55,6 +56,8 @@ module csrfile
             mtval <= 0;
             mcycle <= 0;
             mhartid <= 0;
+            satp <= 0;
+            priv <= PRIV_M;
         end else begin
             if (wen) begin
                 unique case (waddr)

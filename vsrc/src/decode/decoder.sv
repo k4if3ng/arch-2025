@@ -407,6 +407,15 @@ module decoder
                         ctl.op = CSRRCI;
                         ctl.is_imm = 1;
                     end
+                    FUNC3_ECALL: begin
+                        if (f7 == FUNC7_MRET) begin
+                            ctl.op = MRET;
+                        end else if (raw_instr[31:20] == FUNC12_ECALL) begin
+                            ctl.op = ECALL;
+                        end else begin
+                            ctl = 0;
+                        end
+                    end
                     default: begin
                         ctl = 0;
                     end

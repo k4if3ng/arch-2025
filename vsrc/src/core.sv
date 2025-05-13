@@ -46,7 +46,7 @@ module core
 	creg_addr_t ra1, ra2;
 	word_t rd1, rd2;
 	
-	csr_addr_t csr_addr;
+	csr_addr_t csr_raddr;
 	word_t csr_data;
 
 	word_t alusrca, alusrcb;
@@ -107,7 +107,7 @@ module core
 	pcselect pcselect(
 		.pcplus4 	(pc + 4),
 		.pcjump     (dataE_nxt.pcjump),
-		.jump 		(dataE_nxt.ctl.jump | dataE_nxt.ctl.branch),
+		.jump 		(dataE_nxt.ctl.jump),
 		.pc_selected(pc_nxt)
 	);
 
@@ -118,7 +118,7 @@ module core
 		.ra2   (ra2),
 		.rd1   (rd1),
 		.rd2   (rd2),
-		.csr_addr(csr_addr),
+		.csr_raddr(csr_raddr),
 		.csr_data(csr_data)
 	);
 
@@ -154,7 +154,7 @@ module core
 
 	control control(
 		.invalid(ireq.valid & ~iresp.data_ok),
-		.jump(dataE.ctl.jump | dataE.ctl.branch),
+		.jump(dataE.ctl.jump),
 		.csr(dataD_nxt.ctl.csr | dataE_nxt.ctl.csr  | dataM_nxt.ctl.csr),
 		.load_use_hazard(load_use_hazard),
 		.stallpc(stallpc),
@@ -181,8 +181,8 @@ module core
 	csrfile csrfile(
 		.clk(clk),
 		.reset(reset),
-		.raddr(csr_addr),
-		.waddr(dataM.csr_addr),
+		.raddr(csr_raddr),
+		.waddr(dataM.csr_waddr),
 		.wen(dataM.ctl.csr),
 		.wdata(dataM.csr_data),
 		.ren(dataD_nxt.ctl.csr),
@@ -255,7 +255,7 @@ module core
 	DifftestCSRState DifftestCSRState(
 		.clock              (clk),
 		.coreid             (csrfile.mhartid[7:0]),
-		.priviledgeMode     (3),
+		.priviledgeMode     (csrfile.priv),
 		.mstatus            (csrfile.mstatus),
 		.sstatus            (csrfile.mstatus & SSTATUS_MASK), /* mstatus & SSTATUS_MASK */
 		.mepc               (csrfile.mepc),

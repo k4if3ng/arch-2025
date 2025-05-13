@@ -4,7 +4,8 @@
 `ifdef VERILATOR
 `include "include/common.sv"
 `include "include/pipes.sv"
-`include "src//execute/alu.sv"
+`include "src/execute/alu.sv"
+`include "src/reg/csrfile.sv"
 `endif
 
 module execute
@@ -36,8 +37,7 @@ module execute
         dataE.instr = dataD.instr;
         dataE.rd = alusrcb;
         dataE.pcjump = aluout & ~64'b1;
-        dataE.ctl.branch = 0;
-        dataE.csr_addr = dataD.csr_addr;
+        dataE.csr_waddr = dataD.csr_waddr;
         dataE.csr_data = 0;
         dataE.aluout = aluout;
         
@@ -50,22 +50,22 @@ module execute
                 dataE.aluout = dataD.instr.pc + 4;
             end
             BEQ:begin
-                dataE.ctl.branch = alusrca == alusrcb;
+                dataE.ctl.jump = alusrca == alusrcb;
             end
             BNE:begin
-                dataE.ctl.branch = alusrca != alusrcb;
+                dataE.ctl.jump = alusrca != alusrcb;
             end
             BLT:begin
-                dataE.ctl.branch = signed'(alusrca) < signed'(alusrcb);
+                dataE.ctl.jump = signed'(alusrca) < signed'(alusrcb);
             end
             BGE:begin
-                dataE.ctl.branch = signed'(alusrca) >= signed'(alusrcb);
+                dataE.ctl.jump = signed'(alusrca) >= signed'(alusrcb);
             end
             BLTU:begin
-                dataE.ctl.branch = alusrca < alusrcb;
+                dataE.ctl.jump = alusrca < alusrcb;
             end
             BGEU:begin
-                dataE.ctl.branch = alusrca >= alusrcb;
+                dataE.ctl.jump = alusrca >= alusrcb;
             end
 
             // csr
@@ -93,8 +93,15 @@ module execute
                 dataE.aluout = dataD.csr_data;
                 dataE.csr_data = ~srcb & dataD.csr_data;
             end
+            MRET:begin
+                dataE.aluout = csrfile.mepc;
+            end
+            ECALL:begin
+                
+            end
+
             default:begin
-                dataE.ctl.branch = 0;
+                dataE.ctl.jump = 0;
                 dataE.csr_data = 0;
                 dataE.aluout = aluout;
             end

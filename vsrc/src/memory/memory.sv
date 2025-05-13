@@ -28,7 +28,7 @@ module memory
  
     assign dreq.addr  = dataE.aluout;
     assign dataM.mem_addr = dataE.aluout;
-    assign dataM.csr_addr = dataE.csr_addr;
+    assign dataM.csr_waddr = dataE.csr_waddr;
     assign dataM.csr_data = dataE.csr_data;
 
     assign dreq.size = dataE.ctl.op inside {SD, LD}      ? MSIZE8 : 

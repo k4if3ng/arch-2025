@@ -4,6 +4,7 @@
 `ifdef VERILATOR
 `include "include/common.sv"
 `include "include/pipes.sv"
+`include "include/csr.sv"
 `include "src/decode/decoder.sv"
 `else
 
@@ -11,7 +12,8 @@
 
 module decode
     import common::*;
-    import pipes::*;(
+    import pipes::*;
+    import csr_pkg::*;(
     input  fetch_data_t  dataF,
     output decode_data_t dataD,
 
@@ -20,30 +22,32 @@ module decode
     input  word_t       rd1, 
     input  word_t       rd2,
 
-    output csr_addr_t   csr_addr,
+    output csr_addr_t   csr_raddr,
     input  word_t       csr_data
 );
 
     control_t ctl;
+    u64 imm;
 
     decoder decoder(
         .raw_instr(dataF.instr.raw_instr),
-        .imm(dataD.imm),
+        .imm(imm),
         .ctl(ctl)
     );
 
     assign dataD.ctl = ctl;
     assign dataD.dst = dataF.instr.raw_instr[11:7];
     assign dataD.instr = dataF.instr;
+    assign dataD.imm = imm;
     assign ra1 = dataF.instr.raw_instr[19:15];
     assign ra2 = dataF.instr.raw_instr[24:20];
     assign dataD.rs1 = dataF.instr.raw_instr[19:15];
     assign dataD.rs2 = dataF.instr.raw_instr[24:20];
     assign dataD.srca = rd1;
     assign dataD.srcb = rd2;
-    assign csr_addr = dataF.instr.raw_instr[31:20];
-    assign dataD.csr_addr = dataF.instr.raw_instr[31:20];
-    assign dataD.csr_data = csr_data;
+    assign csr_raddr = ctl.op == ECALL ? CSR_MTVEC : dataF.instr.raw_instr[31:20];
+    assign dataD.csr_waddr = ctl.op == ECALL ? CSR_MEPC : dataF.instr.raw_instr[31:20];
+    assign dataD.csr_data = ctl.op == ECALL ? dataF.instr.pc : csr_data;
 
 endmodule
 
