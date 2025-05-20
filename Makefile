@@ -35,7 +35,7 @@ export NEMU_HOME=$(abspath ./ready-to-run)
 
 backup:
 	@cp -r ./vsrc ./vivado ./ready-to-run ./docs ./difftest ./verilate /mnt/d/Study/2025Spring/Architecture/
-	@echo "Backup done
+	@echo "Backup done"
 
 sim:
 	rm -rf build
