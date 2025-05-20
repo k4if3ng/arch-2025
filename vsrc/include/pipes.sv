@@ -3,10 +3,12 @@
 
 `ifdef VERILATOR
 `include "include/common.sv"
+`include "include/csr.sv"
 `endif
 
 package pipes;
 	import common::*;
+	import csr_pkg::*;
 
 /* Define instrucion decoding rules here */
 parameter OPCODE_RTYPE = 7'b0110011;    // R-type 指令的 opcode
@@ -101,8 +103,8 @@ parameter FUNC3_CSRRCI = 3'b111;        // funct3: CSRRCI
 parameter FUNC3_ECALL = 3'b000;        	// funct3: MRET
 
 parameter FUNC7_MRET = 7'b0011000;        // funct7: MRET
-parameter FUNC12_ECALL = 12'b000000000000;   // funct12: ECALL
-parameter FUNC12_EBREAK = 12'b000000000001; // funct12: EBREAK
+parameter INST_MRET = 32'h00000073;        // MRET
+parameter INST_ECALL = 32'h00000073;        // ECALL
 
 
 typedef enum logic [6:0] {
@@ -163,6 +165,9 @@ typedef struct packed {
 	control_t ctl;
 	creg_addr_t dst;
 	instr_data_t instr;
+	excep_data_t excep_wdata;
+	mstatus_t excep_mstatus;
+	priv_t priv;
 } decode_data_t;
 
 typedef struct packed {
@@ -174,6 +179,10 @@ typedef struct packed {
 	creg_addr_t dst;
 	instr_data_t instr;
 	word_t pcjump;
+	excep_data_t excep_wdata;
+	mstatus_t excep_mstatus;
+	priv_t priv;
+	priv_t priv_nxt;
 } exec_data_t;
 
 typedef struct packed {
@@ -184,6 +193,9 @@ typedef struct packed {
 	creg_addr_t dst;
 	instr_data_t instr;
 	word_t mem_addr;
+	excep_data_t excep_wdata;
+	mstatus_t excep_mstatus;
+	priv_t priv;
 } mem_data_t;
 
 typedef struct packed {

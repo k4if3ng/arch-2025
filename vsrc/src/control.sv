@@ -23,7 +23,7 @@ module control
     assign stallE = stallD;
     assign stallM = stallE;
     assign flushpc = csr;
-    assign flushF = 0;
+    assign flushF = jump;
     assign flushD = jump;
     assign flushE = 0;
     assign flushM = 0;

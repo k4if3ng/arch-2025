@@ -94,6 +94,32 @@ package csr_pkg;
     u1  v;
   } pte_t;
 
+typedef enum logic [1:0] {
+  NONE = 2'b00,
+  CSR_OP_ECALL = 2'b01,
+  CSR_OP_MRET = 2'b10
+} csr_op_t;
+
+typedef struct packed {
+	csr_op_t csrop;
+	word_t mcause, mepc, mtval, mtvec;
+	mstatus_t mstatus;
+} excep_data_t;
+
+typedef struct packed {
+  mstatus_t mstatus;
+  word_t mtvec;
+  word_t mip;
+  word_t mie;
+  word_t mscratch;
+  word_t mepc;
+  word_t mcause;
+  word_t mtval;
+  word_t mcycle;
+  word_t mhartid;
+  satp_t satp;
+} csr_t;
+
 endpackage
 
 `endif

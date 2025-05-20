@@ -30,7 +30,9 @@ module core
 	input  ibus_resp_t iresp,
 	output dbus_req_t  dreq,
 	input  dbus_resp_t dresp,
-	input  logic       trint, swint, exint
+	input  logic       trint, swint, exint,
+	output u2 priviledgeMode,
+	output u64 satp
 );
 	
 	u1 stallpc, stallF, stallD, stallE, stallM;
@@ -51,6 +53,26 @@ module core
 
 	word_t alusrca, alusrcb;
 
+	mstatus_t excep_mstatus;
+	excep_data_t excep_rdata;
+
+	priv_t priv;
+	priv_t priv_nxt;
+
+	u1 update_mode;
+
+	assign priviledgeMode = priv_nxt;
+	assign satp = csrfile.csrs.satp;
+
+	always_ff @(posedge clk) begin
+		if (reset) begin
+			priv <= PRIV_M;
+		end else if (update_mode) begin
+			priv <= priv_nxt;
+		end
+	end
+
+	assign update_mode = !stallM ? 1'b1 : 1'b0;
 
 	pcupdate pcupdate(
 		.clk(clk),
@@ -106,8 +128,8 @@ module core
 
 	pcselect pcselect(
 		.pcplus4 	(pc + 4),
-		.pcjump     (dataE_nxt.pcjump),
-		.jump 		(dataE_nxt.ctl.jump),
+		.pcjump     (dataE.pcjump),
+		.jump 		(dataE.ctl.jump),
 		.pc_selected(pc_nxt)
 	);
 
@@ -119,14 +141,17 @@ module core
 		.rd1   (rd1),
 		.rd2   (rd2),
 		.csr_raddr(csr_raddr),
-		.csr_data(csr_data)
+		.csr_data(csr_data),
+		.excep_rdata(excep_rdata)
 	);
 
 	execute execute(
 		.alusrca (alusrca),
 		.alusrcb (alusrcb),
 		.dataD 	 (dataD),
-		.dataE   (dataE_nxt)
+		.dataE   (dataE_nxt),
+		.priv    (priv),
+		.priv_nxt(priv_nxt)
 	);
 
 	memory memory(
@@ -185,16 +210,21 @@ module core
 		.waddr(dataM.csr_waddr),
 		.wen(dataM.ctl.csr),
 		.wdata(dataM.csr_data),
-		.ren(dataD_nxt.ctl.csr),
-		.rdata(csr_data)
+		.rdata(csr_data),
+		.excep_wdata(dataM.excep_wdata),
+		.excep_rdata(excep_rdata),
+		.priv(priv),
+		.priv_nxt(priv_nxt),
+		.pc(dataM.instr.pc),
+		.csrop(dataE.excep_wdata.csrop)
 	);
 
 `ifdef VERILATOR
 	DifftestInstrCommit DifftestInstrCommit(
 		.clock              (clk),
-		.coreid             (csrfile.mhartid[7:0]),
+		.coreid             (csrfile.csrs.mhartid[7:0]),
 		.index              (0),
-		.valid              (!stallM && (dataM.instr.pc != dataM_nxt.instr.pc || dataM_nxt == 0) && dataM != 0),
+		.valid              (!stallM && (dataM.instr.pc != dataM_nxt.instr.pc || dataM_nxt.instr.pc == 0) && dataM.instr.pc != 0),
 		.pc                 (dataM.instr.pc),
 		.instr              (dataM.instr.raw_instr),
 		.skip               (dataM.ctl.mem_access & dataM.mem_addr[31] == 0),
@@ -207,7 +237,7 @@ module core
 
 	DifftestArchIntRegState DifftestArchIntRegState (
 		.clock              (clk),
-		.coreid             (csrfile.mhartid[7:0]),
+		.coreid             (csrfile.csrs.mhartid[7:0]),
 		.gpr_0              (regfile.regs_nxt[0]),
 		.gpr_1              (regfile.regs_nxt[1]),
 		.gpr_2              (regfile.regs_nxt[2]),
@@ -244,7 +274,7 @@ module core
 
     DifftestTrapEvent DifftestTrapEvent(
 		.clock              (clk),
-		.coreid             (csrfile.mhartid[7:0]),
+		.coreid             (csrfile.csrs.mhartid[7:0]),
 		.valid              (0),
 		.code               (0),
 		.pc                 (0),
@@ -254,22 +284,23 @@ module core
 
 	DifftestCSRState DifftestCSRState(
 		.clock              (clk),
-		.coreid             (csrfile.mhartid[7:0]),
-		.priviledgeMode     (csrfile.priv),
-		.mstatus            (csrfile.mstatus),
-		.sstatus            (csrfile.mstatus & SSTATUS_MASK), /* mstatus & SSTATUS_MASK */
-		.mepc               (csrfile.mepc),
+		.coreid             (csrfile.csrs.mhartid[7:0]),
+		.priviledgeMode     (priv_nxt),
+		// .priviledgeMode     (priviledgeMode),
+		.mstatus            (csrfile.csrs.mstatus),
+		.sstatus            (csrfile.csrs.mstatus & SSTATUS_MASK), /* mstatus & SSTATUS_MASK */
+		.mepc               (csrfile.csrs.mepc),
 		.sepc               (0),
-		.mtval              (csrfile.mtval),
+		.mtval              (csrfile.csrs.mtval),
 		.stval              (0),
-		.mtvec              (csrfile.mtvec),
+		.mtvec              (csrfile.csrs.mtvec),
 		.stvec              (0),
-		.mcause             (csrfile.mcause),
+		.mcause             (csrfile.csrs.mcause),
 		.scause             (0),
-		.satp               (csrfile.satp),
-		.mip                (csrfile.mip),
-		.mie                (csrfile.mie),
-		.mscratch           (csrfile.mscratch),
+		.satp               (csrfile.csrs.satp),
+		.mip                (csrfile.csrs.mip),
+		.mie                (csrfile.csrs.mie),
+		.mscratch           (csrfile.csrs.mscratch),
 		.sscratch           (0),
 		.mideleg            (0),
 		.medeleg            (0)

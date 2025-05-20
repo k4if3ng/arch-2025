@@ -3,6 +3,8 @@
 
 `ifdef VERILATOR
 `include "include/common.sv"
+`include "include/csr.sv"
+`include "util/mmu.sv"
 `else
 
 `endif
@@ -12,7 +14,8 @@
  */
 
 module CBusArbiter
-	import common::*;#(
+	import common::*;
+    import csr_pkg::*;#(
     parameter int NUM_INPUTS = 2,  // NOTE: NUM_INPUTS >= 1
 
     localparam int MAX_INDEX = NUM_INPUTS - 1
@@ -22,14 +25,30 @@ module CBusArbiter
     input  cbus_req_t  [MAX_INDEX:0] ireqs,
     output cbus_resp_t [MAX_INDEX:0] iresps,
     output cbus_req_t  oreq,
-    input  cbus_resp_t oresp
+    input  cbus_resp_t oresp,
+    input  priv_t      priviledgeMode,
+    input  satp_t      satp
 );
+
+    cbus_req_t mmu_oreq;
+    cbus_resp_t mmu_oresp;
+    mmu mmu(
+        .clk(clk),
+        .reset(reset),
+        .satp(satp),
+        .priviledgeMode(priviledgeMode),
+        .ireq(mmu_oreq),
+        .iresp(mmu_oresp),
+        .oreq(oreq),
+        .oresp(oresp)
+    );
+
     logic busy;
     int index, select;
     cbus_req_t saved_req, selected_req;
 
     // assign oreq = ireqs[index];
-    assign oreq = busy ? ireqs[index] : '0;  // prevent early issue
+    assign mmu_oreq = busy ? ireqs[index] : '0;  // prevent early issue
     assign selected_req = ireqs[select];
 
     // select a preferred request
@@ -51,7 +70,7 @@ module CBusArbiter
         if (busy) begin
             for (int i = 0; i < NUM_INPUTS; i++) begin
                 if (index == i)
-                    iresps[i] = oresp;
+                    iresps[i] = mmu_oresp;
             end
         end
     end
@@ -59,7 +78,7 @@ module CBusArbiter
     always_ff @(posedge clk)
     if (~reset) begin
         if (busy) begin
-            if (oresp.last)
+            if (mmu_oresp.last)
                 {busy, saved_req} <= '0;
         end else begin
             // if not valid, busy <= 0

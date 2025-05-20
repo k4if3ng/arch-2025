@@ -4,17 +4,20 @@
 `ifdef VERILATOR
 `include "include/common.sv"
 `include "include/pipes.sv"
+`include "include/csr.sv"
 `include "src/execute/alu.sv"
-`include "src/reg/csrfile.sv"
 `endif
 
 module execute
     import common::*;
-    import pipes::*;(
+    import pipes::*;
+    import csr_pkg::*;(
     input  word_t           alusrca, 
     input  word_t           alusrcb,
     input  decode_data_t    dataD,
-    output exec_data_t      dataE
+    output exec_data_t      dataE,
+    input  priv_t           priv,
+    input  priv_t           priv_nxt
 );
 
     word_t aluout;
@@ -40,7 +43,9 @@ module execute
         dataE.csr_waddr = dataD.csr_waddr;
         dataE.csr_data = 0;
         dataE.aluout = aluout;
-        
+        dataE.excep_wdata = dataD.excep_wdata;
+        dataE.priv = priv;
+        dataE.priv_nxt = priv_nxt;
 
         unique case (dataD.ctl.op)
             ADDW, SUBW, ADDIW, SLLW, SRLW, SRAW, SLLIW, SRLIW, SRAIW:begin
@@ -94,10 +99,12 @@ module execute
                 dataE.csr_data = ~srcb & dataD.csr_data;
             end
             MRET:begin
-                dataE.aluout = csrfile.mepc;
+                dataE.ctl.jump = 1'b1;
+                dataE.pcjump = dataD.excep_wdata.mepc;
             end
-            ECALL:begin
-                
+            ECALL: begin
+                dataE.ctl.jump = 1'b1;                              // ECALL 会跳转（trap 到 mtvec）
+                dataE.pcjump = dataD.excep_wdata.mtvec;         // CSR 模块中应提供当前 mtvec 值
             end
 
             default:begin

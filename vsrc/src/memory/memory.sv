@@ -27,9 +27,6 @@ module memory
     assign offset_bit = {dataE.aluout[2:0], 3'b0};
  
     assign dreq.addr  = dataE.aluout;
-    assign dataM.mem_addr = dataE.aluout;
-    assign dataM.csr_waddr = dataE.csr_waddr;
-    assign dataM.csr_data = dataE.csr_data;
 
     assign dreq.size = dataE.ctl.op inside {SD, LD}      ? MSIZE8 : 
                        dataE.ctl.op inside {SW, LW, LWU} ? MSIZE4 :
@@ -49,6 +46,11 @@ module memory
         dataM.ctl = dataE.ctl;
         dataM.dst = dataE.dst;
         dataM.instr = dataE.instr;
+        dataM.mem_addr = dataE.aluout;
+        dataM.csr_waddr = dataE.csr_waddr;
+        dataM.csr_data = dataE.csr_data;
+        dataM.excep_wdata = dataE.excep_wdata;
+        dataM.priv = dataE.priv_nxt;
 
         case(dataE.ctl.op)
             LD: begin

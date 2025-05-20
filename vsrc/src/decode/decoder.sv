@@ -4,14 +4,17 @@
 `ifdef VERILATOR
 `include "include/common.sv"
 `include "include/pipes.sv"
+`include "include/csr.sv"
 `endif
 
 module decoder
     import common::*;
-    import pipes::*;(
+    import pipes::*;
+    import csr_pkg::*;(
     input u32 raw_instr,
     output word_t imm,
-    output control_t ctl
+    output control_t ctl,
+    output excep_data_t excep
 );
 
     wire [6:0] opcode = raw_instr[6:0];
@@ -21,7 +24,8 @@ module decoder
     always_comb begin
         ctl = '0;
         imm = '0;
-        case (opcode)
+        excep = '0;
+        unique case (opcode)
             OPCODE_RTYPE: begin
                 ctl.reg_write = 1;
                 case (f3)
@@ -408,10 +412,14 @@ module decoder
                         ctl.is_imm = 1;
                     end
                     FUNC3_ECALL: begin
+                        ctl.csr = 0;
+                        ctl.reg_write = 0;
                         if (f7 == FUNC7_MRET) begin
                             ctl.op = MRET;
-                        end else if (raw_instr[31:20] == FUNC12_ECALL) begin
+                            excep.csrop = CSR_OP_MRET;
+                        end else if (raw_instr == INST_ECALL) begin
                             ctl.op = ECALL;
+                            excep.csrop = CSR_OP_ECALL;
                         end else begin
                             ctl = 0;
                         end

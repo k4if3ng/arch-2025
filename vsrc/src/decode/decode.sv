@@ -23,7 +23,9 @@ module decode
     input  word_t       rd2,
 
     output csr_addr_t   csr_raddr,
-    input  word_t       csr_data
+    input  word_t       csr_data,
+
+    input  excep_data_t excep_rdata
 );
 
     control_t ctl;
@@ -32,7 +34,8 @@ module decode
     decoder decoder(
         .raw_instr(dataF.instr.raw_instr),
         .imm(imm),
-        .ctl(ctl)
+        .ctl(ctl),
+        .excep(dataD.excep_wdata)
     );
 
     assign dataD.ctl = ctl;
@@ -45,9 +48,14 @@ module decode
     assign dataD.rs2 = dataF.instr.raw_instr[24:20];
     assign dataD.srca = rd1;
     assign dataD.srcb = rd2;
-    assign csr_raddr = ctl.op == ECALL ? CSR_MTVEC : dataF.instr.raw_instr[31:20];
-    assign dataD.csr_waddr = ctl.op == ECALL ? CSR_MEPC : dataF.instr.raw_instr[31:20];
-    assign dataD.csr_data = ctl.op == ECALL ? dataF.instr.pc : csr_data;
+    assign csr_raddr = dataF.instr.raw_instr[31:20];
+    assign dataD.csr_waddr = dataF.instr.raw_instr[31:20];
+    assign dataD.csr_data = csr_data;
+    assign dataD.excep_wdata = '0;
+    assign dataD.excep_wdata.mstatus = excep_rdata.mstatus;
+    assign dataD.excep_wdata.mtvec = excep_rdata.mtvec;
+    assign dataD.excep_wdata.mepc = excep_rdata.mepc;
+    assign dataD.excep_wdata.mcause = 0;
 
 endmodule
 
