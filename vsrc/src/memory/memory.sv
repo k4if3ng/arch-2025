@@ -15,7 +15,8 @@ module memory
     input  dbus_resp_t  dresp,
     output dbus_req_t   dreq,
     output u1           load_use_hazard,
-    output mem_data_t   dataM
+    output mem_data_t   dataM,
+    input  u1           skip
 );
 
     u6 offset_bit;
@@ -51,6 +52,7 @@ module memory
         dataM.csr_data = dataE.csr_data;
         dataM.excep_wdata = dataE.excep_wdata;
         dataM.priv = dataE.priv_nxt;
+        dataM.skip = skip & dataE.ctl.mem_access;
 
         case(dataE.ctl.op)
             LD: begin

@@ -31,10 +31,11 @@ module SimTop import common::*;(
     cbus_resp_t icresp, dcresp;
     u2 priviledgeMode;
     u64 satp;
+    u1 skip;
 
     core core(
       .clk(clock), .reset, .ireq, .iresp, .dreq, .dresp, .trint, .swint, .exint,
-      .priviledgeMode, .satp
+      .priviledgeMode, .satp, .skip
     );
 
     IBusToCBus icvt(.*);

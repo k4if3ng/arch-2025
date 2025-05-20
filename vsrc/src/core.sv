@@ -31,8 +31,9 @@ module core
 	output dbus_req_t  dreq,
 	input  dbus_resp_t dresp,
 	input  logic       trint, swint, exint,
-	output u2 priviledgeMode,
-	output u64 satp
+	output u2 		   priviledgeMode,
+	output u64 		   satp,
+	output u1          skip
 );
 	
 	u1 stallpc, stallF, stallD, stallE, stallM;
@@ -161,7 +162,8 @@ module core
 		.dresp  (dresp),
 		.dreq   (dreq),
 		.load_use_hazard (load_use_hazard),
-		.dataM  (dataM_nxt)
+		.dataM  (dataM_nxt),
+		.skip   (skip)
 	);
 
 	regfile regfile(
@@ -226,7 +228,7 @@ module core
 		.valid              (!stallM && (dataM.instr.pc != dataM_nxt.instr.pc || dataM_nxt.instr.pc == 0) && dataM.instr.pc != 0),
 		.pc                 (dataM.instr.pc),
 		.instr              (dataM.instr.raw_instr),
-		.skip               (dataM.ctl.mem_access & dataM.mem_addr[31] == 0),
+		.skip               (dataM.skip),
 		.isRVC              (0),
 		.scFailed           (0),
 		.wen                (dataM.ctl.reg_write),

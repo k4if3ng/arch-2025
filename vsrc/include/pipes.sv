@@ -192,6 +192,7 @@ typedef struct packed {
 	word_t mem_addr;
 	excep_data_t excep_wdata;
 	priv_t priv;
+	u1 skip;
 } mem_data_t;
 
 typedef struct packed {

@@ -16,7 +16,8 @@ module mmu
     input  cbus_req_t  ireq,
     input  cbus_resp_t oresp,
     output cbus_req_t  oreq,
-    output cbus_resp_t iresp
+    output cbus_resp_t iresp,
+    output u1          skip
 );
     typedef enum logic [3:0] {
         IDLE, PTW_L2, PTW_L1, PTW_L0, ACCESS, RESP
@@ -47,7 +48,7 @@ always_ff @(posedge clk or posedge reset) begin
             case (state)
                 IDLE: begin
                     if (ireq.valid) begin
-                        if (ireq.addr[31] == 0 || priv_t'(priviledgeMode) == PRIV_M || satp.mode == 0) begin
+                        if (priv_t'(priviledgeMode) == PRIV_M || satp.mode != 4'd8) begin
                             state <= ACCESS;
                             oreq.valid <= 1;
                             oreq.is_write <= ireq.is_write;
@@ -156,6 +157,7 @@ always_ff @(posedge clk or posedge reset) begin
                         iresp.ready <= 0;
                         iresp.last <= 0;
                         iresp.data <= 0;
+                        skip <= oreq.addr[31] == 0;
                     end
                 end
                 
@@ -163,6 +165,7 @@ always_ff @(posedge clk or posedge reset) begin
                     state <= IDLE;
                     oreq.valid <= 0;
                     iresp.ready <= 0;
+                    skip <= 0;
                 end
             endcase
         end

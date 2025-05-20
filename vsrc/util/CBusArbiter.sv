@@ -27,7 +27,8 @@ module CBusArbiter
     output cbus_req_t  oreq,
     input  cbus_resp_t oresp,
     input  u2          priviledgeMode,
-    input  satp_t      satp
+    input  satp_t      satp,
+    output u1          skip
 );
 
     cbus_req_t mmu_oreq;
@@ -40,7 +41,8 @@ module CBusArbiter
         .ireq(mmu_oreq),
         .iresp(mmu_oresp),
         .oreq(oreq),
-        .oresp(oresp)
+        .oresp(oresp),
+        .skip(skip)
     );
 
     logic busy;

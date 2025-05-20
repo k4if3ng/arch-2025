@@ -26,6 +26,7 @@ module VTop
     cbus_resp_t icresp, dcresp;
     u2 priviledgeMode;
     u64 satp;
+    u1 skip;
 
     core core(.*);
     IBusToCBus icvt(.*);
