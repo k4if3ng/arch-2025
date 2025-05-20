@@ -34,7 +34,7 @@ export NOOP_HOME=$(abspath .)
 export NEMU_HOME=$(abspath ./ready-to-run)
 
 backup:
-	@cp -r ./vsrc ./vivado ./ready-to-run ./docs ./difftest ./verilate /mnt/d/Study/2025Spring/Architecture/
+	@cp -r ./vsrc ./vivado ./ready-to-run ./docs /mnt/d/Study/2025Spring/Architecture/
 	@echo "Backup done"
 
 sim:
@@ -70,4 +70,4 @@ include verilate/Makefile.include
 include verilate/Makefile.verilate.mk
 include verilate/Makefile.vsim.mk
 
-.PHONY: emu clean sim backup
+.PHONY: emu clean sim backup backup-code

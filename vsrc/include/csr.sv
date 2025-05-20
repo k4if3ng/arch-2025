@@ -39,6 +39,13 @@ package csr_pkg;
   parameter u64 MEDELEG_MASK = 64'h0;
   parameter u64 MIDELEG_MASK = 64'h0;
 
+  typedef enum logic [1:0] { 
+    PRIV_U = 2'b00,
+    PRIV_S = 2'b01,
+    PRIV_H = 2'b10,
+    PRIV_M = 2'b11
+  } priv_t;
+  
   typedef struct packed {
     u1 sd;
     logic [MXLEN-2-36:0] wpri1;
@@ -53,7 +60,7 @@ package csr_pkg;
     u1 mprv;
     u2 xs;
     u2 fs;
-    u2 mpp;
+    priv_t mpp;
     u2 wpri3;
     u1 spp;
     u1 mpie;
@@ -72,32 +79,11 @@ package csr_pkg;
     u44 ppn;
   } satp_t;
 
-  typedef enum logic [1:0] { 
-    PRIV_U = 2'b00,
-    PRIV_S = 2'b01,
-    PRIV_H = 2'b10,
-    PRIV_M = 2'b11
-  } priv_t;
-
-  // sv39
-  typedef struct packed {
-    u10 reserved;
-    u44 ppn;
-    u2  rsw;
-    u1  d;
-    u1  a;
-    u1  g;
-    u1  u;
-    u1  x;
-    u1  w;
-    u1  r;
-    u1  v;
-  } pte_t;
-
 typedef enum logic [1:0] {
-  NONE = 2'b00,
+  CSR_OP_NONE = 2'b00,
   CSR_OP_ECALL = 2'b01,
-  CSR_OP_MRET = 2'b10
+  CSR_OP_MRET = 2'b10,
+  CSR_OP_EBREAK = 2'b11
 } csr_op_t;
 
 typedef struct packed {

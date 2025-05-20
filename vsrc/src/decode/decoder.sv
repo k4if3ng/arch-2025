@@ -4,17 +4,14 @@
 `ifdef VERILATOR
 `include "include/common.sv"
 `include "include/pipes.sv"
-`include "include/csr.sv"
 `endif
 
 module decoder
     import common::*;
-    import pipes::*;
-    import csr_pkg::*;(
+    import pipes::*;(
     input u32 raw_instr,
     output word_t imm,
-    output control_t ctl,
-    output excep_data_t excep
+    output control_t ctl
 );
 
     wire [6:0] opcode = raw_instr[6:0];
@@ -24,7 +21,6 @@ module decoder
     always_comb begin
         ctl = '0;
         imm = '0;
-        excep = '0;
         unique case (opcode)
             OPCODE_RTYPE: begin
                 ctl.reg_write = 1;
@@ -127,7 +123,7 @@ module decoder
             end
 
             OPCODE_ITYPE: begin
-                imm = {{52{raw_instr[31]}}, raw_instr[31:20]};  // I-type 指令的立即数
+                imm = {{52{raw_instr[31]}}, raw_instr[31:20]};
                 ctl.reg_write = 1;
                 ctl.is_imm = 1;
                 case (f3)
@@ -228,7 +224,7 @@ module decoder
             end
 
             OPCODE_ITYPEW: begin
-                imm = {{52{raw_instr[31]}}, raw_instr[31:20]};  // I-type 指令的立即数
+                imm = {{52{raw_instr[31]}}, raw_instr[31:20]};
                 ctl.is_imm = 1;
                 ctl.reg_write = 1;
                 case (f3)
@@ -262,7 +258,7 @@ module decoder
             end
 
             OPCODE_LOAD: begin
-                imm = {{52{raw_instr[31]}}, raw_instr[31:20]};  // I-type 指令的立即数
+                imm = {{52{raw_instr[31]}}, raw_instr[31:20]};
                 ctl.mem_access = 1;
                 ctl.mem_to_reg = 1;
                 ctl.reg_write = 1;
@@ -297,7 +293,7 @@ module decoder
             end
             
             OPCODE_BTYPE: begin
-                imm = {{52{raw_instr[31]}}, raw_instr[7], raw_instr[30:25], raw_instr[11:8], 1'b0};  // B-type 指令的立即数
+                imm = {{52{raw_instr[31]}}, raw_instr[7], raw_instr[30:25], raw_instr[11:8], 1'b0};
                 ctl.aluop = ALU_ADD;
                 ctl.is_imm = 1;
                 case (f3)
@@ -326,7 +322,7 @@ module decoder
             end
 
             OPCODE_STORE: begin
-                imm = {{52{raw_instr[31]}}, raw_instr[31:25], raw_instr[11:7]};  // S-type 指令的立即数
+                imm = {{52{raw_instr[31]}}, raw_instr[31:25], raw_instr[11:7]};
                 ctl.mem_access = 1;
                 ctl.aluop = ALU_ADD;
                 ctl.is_imm = 1;
@@ -344,14 +340,14 @@ module decoder
                         ctl.op = SW;
                     end
                     default: begin
-                        ctl = 0;  // 无效的操作
+                        ctl = 0;
                     end
                 endcase
             end
             
 
             OPCODE_LUI: begin
-                imm = {{32{raw_instr[31]}}, raw_instr[31:12], 12'b0};  // U-type 指令的立即数
+                imm = {{32{raw_instr[31]}}, raw_instr[31:12], 12'b0};
                 ctl.aluop = ALU_LUI;
                 ctl.reg_write = 1;
                 ctl.is_imm = 1;
@@ -359,7 +355,7 @@ module decoder
             end
 
             OPCODE_AUIPC: begin
-                imm = {{32{raw_instr[31]}}, raw_instr[31:12], 12'b0};  // U-type 指令的立即数
+                imm = {{32{raw_instr[31]}}, raw_instr[31:12], 12'b0};
                 ctl.aluop = ALU_ADD;
                 ctl.reg_write = 1;
                 ctl.is_imm = 1;
@@ -367,7 +363,7 @@ module decoder
             end
 
             OPCODE_JAL: begin
-                imm = {{44{raw_instr[31]}}, raw_instr[19:12], raw_instr[20], raw_instr[30:21], 1'b0};  // J-type 指令的立即数
+                imm = {{44{raw_instr[31]}}, raw_instr[19:12], raw_instr[20], raw_instr[30:21], 1'b0};
                 ctl.aluop = ALU_ADD;
                 ctl.reg_write = 1;
                 ctl.is_imm = 1;
@@ -376,7 +372,7 @@ module decoder
             end
 
             OPCODE_JALR: begin
-                imm = {{52{raw_instr[31]}}, raw_instr[31:20]};  // I-type 指令的立即数
+                imm = {{52{raw_instr[31]}}, raw_instr[31:20]};
                 ctl.aluop = ALU_ADD;
                 ctl.reg_write = 1;
                 ctl.is_imm = 1;
@@ -416,10 +412,8 @@ module decoder
                         ctl.reg_write = 0;
                         if (f7 == FUNC7_MRET) begin
                             ctl.op = MRET;
-                            excep.csrop = CSR_OP_MRET;
                         end else if (raw_instr == INST_ECALL) begin
                             ctl.op = ECALL;
-                            excep.csrop = CSR_OP_ECALL;
                         end else begin
                             ctl = 0;
                         end

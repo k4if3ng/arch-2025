@@ -118,7 +118,7 @@ typedef enum logic [6:0] {
 	BEQ, BNE, BLT, BGE, BLTU, BGEU,
 	JALR, JAL,
 	CSRRW, CSRRS, CSRRC, CSRRWI, CSRRSI, CSRRCI,
-	MRET, ECALL
+	MRET, ECALL, EBREAK
 } instr_op_t;
 
 typedef enum logic [4:0] {
@@ -166,8 +166,6 @@ typedef struct packed {
 	creg_addr_t dst;
 	instr_data_t instr;
 	excep_data_t excep_wdata;
-	mstatus_t excep_mstatus;
-	priv_t priv;
 } decode_data_t;
 
 typedef struct packed {
@@ -180,7 +178,6 @@ typedef struct packed {
 	instr_data_t instr;
 	word_t pcjump;
 	excep_data_t excep_wdata;
-	mstatus_t excep_mstatus;
 	priv_t priv;
 	priv_t priv_nxt;
 } exec_data_t;
@@ -194,7 +191,6 @@ typedef struct packed {
 	instr_data_t instr;
 	word_t mem_addr;
 	excep_data_t excep_wdata;
-	mstatus_t excep_mstatus;
 	priv_t priv;
 } mem_data_t;
 

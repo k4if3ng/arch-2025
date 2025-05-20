@@ -44,7 +44,7 @@ module csrfile
             default:     rdata = '0;
         endcase
         
-        excep_rdata = '0;
+        excep_rdata.csrop = CSR_OP_NONE;
         excep_rdata.mstatus = csrs.mstatus;
         excep_rdata.mepc = csrs.mepc;
         excep_rdata.mcause = csrs.mcause;
@@ -57,16 +57,6 @@ module csrfile
         csrs_nxt.mcycle = csrs.mcycle + 1; // Increment cycle count
         priv_nxt = priv;
 
-        // // change priv in memory stage
-        // unique case (csrop)
-        //     CSR_OP_MRET:    priv_nxt = PRIV_U;
-        //     CSR_OP_ECALL: begin 
-        //         priv_nxt = PRIV_M;
-        //     end
-        //     default:        priv_nxt = priv;
-        // endcase
-
-        // update mstatus in write back stage
         unique case (excep_wdata.csrop)
             CSR_OP_MRET: begin
                 csrs_nxt.mstatus.mie  = csrs.mstatus.mpie;

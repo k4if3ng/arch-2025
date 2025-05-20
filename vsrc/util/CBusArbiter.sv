@@ -26,7 +26,7 @@ module CBusArbiter
     output cbus_resp_t [MAX_INDEX:0] iresps,
     output cbus_req_t  oreq,
     input  cbus_resp_t oresp,
-    input  priv_t      priviledgeMode,
+    input  u2          priviledgeMode,
     input  satp_t      satp
 );
 

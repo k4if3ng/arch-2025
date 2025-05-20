@@ -53,7 +53,6 @@ module core
 
 	word_t alusrca, alusrcb;
 
-	mstatus_t excep_mstatus;
 	excep_data_t excep_rdata;
 
 	priv_t priv;
@@ -286,7 +285,6 @@ module core
 		.clock              (clk),
 		.coreid             (csrfile.csrs.mhartid[7:0]),
 		.priviledgeMode     (priv_nxt),
-		// .priviledgeMode     (priviledgeMode),
 		.mstatus            (csrfile.csrs.mstatus),
 		.sstatus            (csrfile.csrs.mstatus & SSTATUS_MASK), /* mstatus & SSTATUS_MASK */
 		.mepc               (csrfile.csrs.mepc),

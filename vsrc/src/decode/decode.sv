@@ -34,8 +34,7 @@ module decode
     decoder decoder(
         .raw_instr(dataF.instr.raw_instr),
         .imm(imm),
-        .ctl(ctl),
-        .excep(dataD.excep_wdata)
+        .ctl(ctl)
     );
 
     assign dataD.ctl = ctl;
@@ -51,11 +50,15 @@ module decode
     assign csr_raddr = dataF.instr.raw_instr[31:20];
     assign dataD.csr_waddr = dataF.instr.raw_instr[31:20];
     assign dataD.csr_data = csr_data;
-    assign dataD.excep_wdata = '0;
     assign dataD.excep_wdata.mstatus = excep_rdata.mstatus;
     assign dataD.excep_wdata.mtvec = excep_rdata.mtvec;
     assign dataD.excep_wdata.mepc = excep_rdata.mepc;
     assign dataD.excep_wdata.mcause = 0;
+    assign dataD.excep_wdata.mtval = 0;
+    assign dataD.excep_wdata.csrop = ctl.op == MRET ? CSR_OP_MRET :
+                                    ctl.op == ECALL ? CSR_OP_ECALL :
+                                    ctl.op == EBREAK ? CSR_OP_EBREAK :
+                                    CSR_OP_NONE;
 
 endmodule
 

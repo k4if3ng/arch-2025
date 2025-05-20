@@ -103,8 +103,8 @@ module execute
                 dataE.pcjump = dataD.excep_wdata.mepc;
             end
             ECALL: begin
-                dataE.ctl.jump = 1'b1;                              // ECALL 会跳转（trap 到 mtvec）
-                dataE.pcjump = dataD.excep_wdata.mtvec;         // CSR 模块中应提供当前 mtvec 值
+                dataE.ctl.jump = 1'b1;
+                dataE.pcjump = dataD.excep_wdata.mtvec;
             end
 
             default:begin
