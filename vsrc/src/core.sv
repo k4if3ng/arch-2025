@@ -39,6 +39,9 @@ module core
 	u1 stallpc, stallF, stallD, stallE, stallM;
 	u1 flushpc, flushF, flushD, flushE, flushM;
 	u1 load_use_hazard;
+	
+	u1 update_mode;
+	u1 valid;
 
 	u64 pc, pc_nxt;
 	fetch_data_t 	dataF, dataF_nxt;
@@ -59,10 +62,10 @@ module core
 	priv_t priv;
 	priv_t priv_nxt;
 
-	u1 update_mode;
-
 	assign priviledgeMode = priv_nxt;
 	assign satp = csrfile.csrs.satp;
+	assign valid = !stallM && dataM.instr.pc != 0 && 
+					(dataM.instr.pc != dataM_nxt.instr.pc || dataM_nxt.instr.pc == 0);
 
 	always_ff @(posedge clk) begin
 		if (reset) begin
@@ -225,7 +228,7 @@ module core
 		.clock              (clk),
 		.coreid             (csrfile.csrs.mhartid[7:0]),
 		.index              (0),
-		.valid              (!stallM && (dataM.instr.pc != dataM_nxt.instr.pc || dataM_nxt.instr.pc == 0) && dataM.instr.pc != 0),
+		.valid              (valid),
 		.pc                 (dataM.instr.pc),
 		.instr              (dataM.instr.raw_instr),
 		.skip               (dataM.skip),
