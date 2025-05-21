@@ -14,9 +14,9 @@ module decoder
     output control_t ctl
 );
 
-    wire [6:0] opcode = raw_instr[6:0];
-    wire [6:0] f7 = raw_instr[31:25];
-    wire [2:0] f3 = raw_instr[14:12];
+    u7 opcode = raw_instr[6:0];
+    u7 f7 = raw_instr[31:25];
+    u3 f3 = raw_instr[14:12];
 
     always_comb begin
         ctl = '0;

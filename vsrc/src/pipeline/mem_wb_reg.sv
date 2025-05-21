@@ -11,14 +11,14 @@ module mem_wb_reg
     import pipes::*;(
     input  logic        clk, reset,
     input  mem_data_t   dataM_nxt,
-    input  logic        flush, stall,
+    input  logic        flushM, stallM,
     output mem_data_t   dataM
 );
 
     always_ff @(posedge clk) begin
-        if (reset | flush) begin
+        if (reset | flushM) begin
             dataM <= '0;
-        end else if (~stall) begin
+        end else if (~stallM) begin
             dataM <= dataM_nxt;
         end
     end

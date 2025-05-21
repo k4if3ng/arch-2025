@@ -77,49 +77,15 @@ module core
 
 	assign update_mode = !stallM ? 1'b1 : 1'b0;
 
-	pcupdate pcupdate(
-		.clk(clk),
-		.reset(reset),
-		.stall(stallpc),
-		.pc_nxt(pc_nxt),
-		.pc(pc)
-	);
+	pcupdate pcupdate(.*);
 
-	if_id_reg if_id_reg(
-		.clk	(clk),
-		.reset  (reset),
-		.dataF_nxt(dataF_nxt),
-		.flush  (flushF),
-		.stall  (stallF),
-		.dataF  (dataF)
-	);
+	if_id_reg if_id_reg(.*);
 
-	id_ex_reg id_ex_reg(
-		.clk	(clk),
-		.reset  (reset),
-		.dataD_nxt(dataD_nxt),
-		.flush  (flushD),
-		.stall  (stallD),
-		.dataD  (dataD)
-	);
+	id_ex_reg id_ex_reg(.*);
 
-	ex_mem_reg ex_mem_reg(
-		.clk	(clk),
-		.reset  (reset),
-		.dataE_nxt(dataE_nxt),
-		.flush  (flushE),
-		.stall  (stallE),
-		.dataE  (dataE)
-	);
+	ex_mem_reg ex_mem_reg(.*);
 
-	mem_wb_reg mem_wb_reg(
-		.clk	(clk),
-		.reset  (reset),
-		.dataM_nxt(dataM_nxt),
-		.flush  (flushM),
-		.stall  (stallM),
-		.dataM  (dataM)
-	);
+	mem_wb_reg mem_wb_reg(.*);
 
 	fetch fetch(
 		.pc			(pc),
@@ -186,16 +152,7 @@ module core
 		.jump(dataE.ctl.jump),
 		.csr(dataD_nxt.ctl.csr | dataE_nxt.ctl.csr  | dataM_nxt.ctl.csr),
 		.load_use_hazard(load_use_hazard),
-		.stallpc(stallpc),
-		.stallF(stallF),
-		.stallD(stallD),
-		.stallE(stallE),
-		.stallM(stallM),
-		.flushpc(flushpc),
-		.flushF(flushF),
-		.flushD(flushD),
-		.flushE(flushE),
-		.flushM(flushM)
+		.* 				// stall & flush signals
 	);
 
 	forward forward (

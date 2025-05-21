@@ -11,14 +11,14 @@ module id_ex_reg
     import pipes::*;(
     input  logic            clk, reset,
     input  decode_data_t    dataD_nxt,
-    input  logic            flush, stall,
+    input  logic            flushD, stallD,
     output decode_data_t    dataD
 );
 
     always_ff @(posedge clk) begin
-        if (reset | flush) begin
+        if (reset | flushD) begin
             dataD <= '0;
-        end else if (~stall) begin
+        end else if (~stallD) begin
             dataD <= dataD_nxt;
         end
     end

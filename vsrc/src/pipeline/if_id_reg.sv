@@ -11,14 +11,14 @@ module if_id_reg
     import pipes::*;(
     input  logic        clk, reset,
     input  fetch_data_t dataF_nxt,
-    input  logic        flush, stall,
+    input  logic        flushF, stallF,
     output fetch_data_t dataF
 );
 
     always_ff @( posedge clk ) begin
-        if (reset | flush) begin
+        if (reset | flushF) begin
             dataF <= '0;
-        end else if (~stall) begin
+        end else if (~stallF) begin
             dataF <= dataF_nxt;
         end
     end

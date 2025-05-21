@@ -10,7 +10,7 @@ module pcupdate
     import common::*;
     import pipes::*;(
     input  logic        clk, reset,
-    input  logic        stall,
+    input  logic        stallpc,
     input  u64          pc_nxt,
     output u64          pc
 );
@@ -18,7 +18,7 @@ module pcupdate
     always_ff @(posedge clk) begin
         if (reset) begin
             pc <= PCINIT;
-        end else if (stall) begin
+        end else if (stallpc) begin
             pc <= pc;
         end else begin
             pc <= pc_nxt;

@@ -11,14 +11,14 @@ module ex_mem_reg
     import pipes::*;(
     input  logic        clk, reset,
     input  exec_data_t  dataE_nxt,
-    input  logic        flush, stall,
+    input  logic        flushE, stallE,
     output exec_data_t  dataE
 );
 
     always_ff @(posedge clk) begin
-        if (reset | flush) begin
+        if (reset | flushE) begin
             dataE <= '0;
-        end else if (~stall) begin
+        end else if (~stallE) begin
             dataE <= dataE_nxt;
         end
     end

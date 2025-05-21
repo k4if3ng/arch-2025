@@ -206,9 +206,5 @@ typedef struct packed {
 	word_t srca, srcb;
 } decode_t;
 
-typedef enum logic [1:0] {
-	IDLE, WAITING, OVER
-} mem_access_state_t;
-
 endpackage
 `endif

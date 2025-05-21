@@ -106,6 +106,46 @@ typedef struct packed {
   satp_t satp;
 } csr_t;
 
+typedef struct packed {
+  u10 rsvd2;
+  u44 ppn;
+  u2  rsvd1;
+  u1  d;
+  u1  a;
+  u1  g;
+  u1  u;
+  u1  x;
+  u1  w;
+  u1  r;
+  u1  v;
+} pte_t;
+
+  // Exception cause codes from mcause register
+  // Interrupt bit (MSB) = 1
+  parameter word_t EXC_S_SOFTWARE_INTERRUPT = {1'b1, {(MXLEN-1){1'b0}} | 'd1};
+  parameter word_t EXC_M_SOFTWARE_INTERRUPT = {1'b1, {(MXLEN-1){1'b0}} | 'd3};
+  parameter word_t EXC_S_TIMER_INTERRUPT    = {1'b1, {(MXLEN-1){1'b0}} | 'd5};
+  parameter word_t EXC_M_TIMER_INTERRUPT    = {1'b1, {(MXLEN-1){1'b0}} | 'd7};
+  parameter word_t EXC_S_EXTERNAL_INTERRUPT = {1'b1, {(MXLEN-1){1'b0}} | 'd9};
+  parameter word_t EXC_M_EXTERNAL_INTERRUPT = {1'b1, {(MXLEN-1){1'b0}} | 'd11};
+  
+  // Exception bit (MSB) = 0
+  parameter word_t EXC_INSTRUCTION_ADDR_MISALIGNED = 'd0;
+  parameter word_t EXC_INSTRUCTION_ACCESS_FAULT    = 'd1;
+  parameter word_t EXC_ILLEGAL_INSTRUCTION         = 'd2;
+  parameter word_t EXC_BREAKPOINT                  = 'd3;
+  parameter word_t EXC_LOAD_ADDR_MISALIGNED        = 'd4;
+  parameter word_t EXC_LOAD_ACCESS_FAULT           = 'd5;
+  parameter word_t EXC_STORE_ADDR_MISALIGNED       = 'd6;
+  parameter word_t EXC_STORE_ACCESS_FAULT          = 'd7;
+  parameter word_t EXC_ECALL_FROM_U                = 'd8;
+  parameter word_t EXC_ECALL_FROM_S                = 'd9;
+  parameter word_t EXC_ECALL_FROM_M                = 'd11;
+  parameter word_t EXC_INSTRUCTION_PAGE_FAULT      = 'd12;
+  parameter word_t EXC_LOAD_PAGE_FAULT             = 'd13;
+  parameter word_t EXC_STORE_PAGE_FAULT            = 'd15;
+
+
 endpackage
 
 `endif

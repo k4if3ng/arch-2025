@@ -19,6 +19,10 @@ module memory
     input  u1           skip
 );
 
+    typedef enum logic [1:0] {
+        IDLE, WAITING, OVER
+    } mem_access_state_t;
+    
     u6 offset_bit;
     u3 offset_byte;
     word_t memout;

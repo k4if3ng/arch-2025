@@ -19,6 +19,7 @@ module mmu
     output cbus_resp_t iresp,
     output u1          skip
 );
+
     typedef enum logic [3:0] {
         IDLE, PTW_L2, PTW_L1, PTW_L0, ACCESS, RESP
     } mmu_state_t;
@@ -27,9 +28,9 @@ module mmu
     
     // add to statisfy vivado
     logic pte_ready;
-    u64 pte_data;
+    pte_t pte_data;
 
-always_ff @(posedge clk or posedge reset) begin
+    always_ff @(posedge clk or posedge reset) begin
         if (reset) begin
             state <= IDLE;
             oreq <= '0;
@@ -75,7 +76,7 @@ always_ff @(posedge clk or posedge reset) begin
                 PTW_L2: begin
                     if (pte_ready) begin
                         pte_ready <= 0;
-                        if (pte_data[1] || pte_data[2] || pte_data[3]) begin
+                        if (pte_data.w || pte_data.r || pte_data.x) begin
                             state <= ACCESS;
                             oreq.valid <= 1;
                             oreq.is_write <= ireq.is_write;
@@ -102,7 +103,7 @@ always_ff @(posedge clk or posedge reset) begin
                 PTW_L1: begin
                     if (pte_ready) begin
                         pte_ready <= 0;
-                        if (pte_data[1] || pte_data[2] || pte_data[3]) begin
+                        if (pte_data.w || pte_data.r || pte_data.x) begin
                             state <= ACCESS;
                             oreq.valid <= 1;
                             oreq.is_write <= ireq.is_write;
